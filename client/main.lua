@@ -49,7 +49,10 @@ local function spawnvehicle ( data )
     })
     
     Entity(veh).state:set('vehlabel', data.vehicle_name)
-    TriggerEvent("vehiclekeys:client:SetOwner", serverData.plate:trim())
+    if not exports.mri_Qcarkeys:HavePermanentKey(serverData.plate:trim()) then
+        exports.mri_Qcarkeys:GiveKeyItem(serverData.plate:trim(), veh)
+    end
+    -- TriggerEvent("vehiclekeys:client:SetOwner", serverData.plate:trim())
 end
 
 local function actionMenu ( data )
@@ -268,7 +271,7 @@ local function openMenu ( data )
     
     local menuData = {
         id = 'garage_menu',
-        title = data.garage:upper(),
+        title = data.garage,
         options = {}
     }
 

@@ -41,11 +41,11 @@ function spawnPoint.create(zone, required)
     local polygon = glm.polygon.new(zone.points)
 
     local text = [[
-    [X]: Cancel
-    [Enter]: Confirm
-    [Arrow Up/Down]: Height
-    [Arrow Right/Left]: Rotate Vehicle
-    [Mouse Scroll Up/Down]: Change Vehicle
+    [X]: Cancelar
+    [Enter]: Confirmar
+    [Setas Cima/Baixo]: Altura
+    [Setas Direita/Esquerda]: Rotacionar Veículo
+    [Mouse Scroll Cima/Baixo]: Mudar Veículo
     ]]
 
     lib.showTextUI(text)
@@ -140,7 +140,7 @@ function spawnPoint.create(zone, required)
             
             if IsDisabledControlJustPressed(0, 73) then
                 if required and #vc < 1 then
-                    utils.notify("You must create at least x1 spawn points", "error", 8000)
+                    utils.notify("Você deve criar pelo menos pontos de desova x1", "error", 8000)
                 else
                     CancelPlacement()
                 end
@@ -153,9 +153,9 @@ function spawnPoint.create(zone, required)
 
                     if inZone then
                         vc[#vc+1] = vec4(CurrentCoords.x, CurrentCoords.y, CurrentCoords.z, heading)
-                        utils.notify("location successfully created " .. #vc, "success", 8000)
+                        utils.notify("Localização criada com sucesso" .. #vc, "success", 8000)
                     else
-                        utils.notify("cannot add spawn points outside the zone", "error", 8000)
+                        utils.notify("Não pode adicionar pontos de desova fora da zona", "error", 8000)
                     end
                 end
             end

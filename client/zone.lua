@@ -46,7 +46,7 @@ function zone.refresh ()
             function zoneOptions:inside()
                 if not stui then
                     local dl = cache.vehicle and ('[E] - %s'):format(k) or k
-                    utils.drawtext('show', dl:upper(), 'warehouse')
+                    utils.drawtext('show', dl, 'warehouse')
                     stui = true
                 end
                 if IsControlJustPressed(0, 38) and cache.vehicle then
@@ -62,7 +62,7 @@ function zone.refresh ()
                 ped = utils.createTargetPed(model, pc, {
                     {
                         name = "open_garage",
-                        label = "Open Garage",
+                        label = "Abrir Garagem",
                         icon = "fas fa-warehouse",
                         action = function ()
                             args.targetped = true
@@ -98,7 +98,7 @@ function zone.refresh ()
             function zoneOptions:onEnter()
                 if not zone.authorize(k, v) then return end
                 local dl = ('[E] - %s'):format(k)
-                utils.drawtext('show', dl:upper(), 'warehouse')
+                utils.drawtext('show', dl, 'warehouse')
             end
 
             function zoneOptions:onExit()
@@ -107,7 +107,7 @@ function zone.refresh ()
         elseif v.interaction == "radial" then
             function zoneOptions:onEnter()
                 if not zone.authorize(k, v) then return end
-                utils.drawtext('show', k:upper(), 'warehouse')
+                utils.drawtext('show', k, 'warehouse')
 
                 radFunc.create({
                     id = "open_garage",

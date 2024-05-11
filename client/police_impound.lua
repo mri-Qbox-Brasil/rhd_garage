@@ -154,12 +154,12 @@ local function openpoliceImpound ( garage )
                                 if not checkkDate then
                                     local alert = lib.alertDialog({
                                         header = ("Halo %s"):format(fw.gn()),
-                                        content = ("waktu penyitaan kendaraan ini masih %s hari lagi, apakah anda ingin tetap mengeluarkan kendaraa ini?"):format(day),
+                                        content = ("O tempo de confisco deste veículo ainda é %s dias, você quer manter este veículo?"):format(day),
                                         centered = true,
                                         cancel = true,
                                         labels = {
-                                            confirm = "Ya",
-                                            cancel = "Tidak"
+                                            confirm = "Confirmar",
+                                            cancel = "Cancelar"
                                         }
                                     })
 
@@ -198,7 +198,7 @@ local function openpoliceImpound ( garage )
 
     if #context.options < 1 then
         context.options[#context.options+1] = {
-            title = "Tidak ada Kendaraan",
+            title = "Não há veículos",
             disabled = true
         }
     end
@@ -236,10 +236,10 @@ local function impoundVehicle (vehicle)
     local officerName = fw.gn()
 
     local input = lib.inputDialog(("%s [%s]"):format(vehlabel, plate:upper()), {
-        { type = 'input', label = 'PEMILIK', placeholder = ownerName:upper(), disabled = true },
-        { type = 'number', label = 'DENDA', required = true, default = 10000, min = 1, max = 1000000 },
-        { type = 'select', label = 'GARASI PENYITAAN', options = garageList, default = garageList[1] },
-        { type = 'date', label = 'DI SITA SAMPAI?', icon = {'far', 'calendar'}, default = true, format = "DD/MM/YYYY" }
+        { type = 'input', label = 'PROPRIETÁRIO', placeholder = ownerName:upper(), disabled = true },
+        { type = 'number', label = 'Comprar', required = true, default = 10000, min = 1, max = 1000000 },
+        { type = 'select', label = 'Garagem de confisco', required = true, options = garageList, default = garageList[1] },
+        { type = 'date', label = 'No confisco chegou?', icon = {'far', 'calendar'}, default = true, format = "DD/MM/YYYY" }
     })
     
     if input then
@@ -258,7 +258,7 @@ local function impoundVehicle (vehicle)
 
         if lib.progressBar({
             duration = 5000,
-            label = "Menyita Kendaraan",
+            label = "Confiscando um veículo",
             useWhileDead = false,
             canCancel = true,
             disable = {
@@ -274,7 +274,7 @@ local function impoundVehicle (vehicle)
             },
             prop = {
                 {
-                model = `prop_notepad_01`,
+                model = 'prop_notepad_01',
                 bone = 18905,
                 pos = { x = 0.1, y = 0.02, z = 0.05 },
                 rot = { x = 10.0, y = 0.0, z = 0.0 },
@@ -291,7 +291,7 @@ local function impoundVehicle (vehicle)
             lib.callback('rhd_garage:cb_server:policeImpound.impoundveh', false, function ( success )
                 SetEntityAsMissionEntity(vehicle, true, true)
                 DeleteVehicle(vehicle)
-                utils.notify("Kendaraan berhasil di sita!", "success")
+                utils.notify("O veículo foi confiscado com sucesso!", "success")
             end, sendToServer)
 
             ClearPedTasks(cache.ped)
@@ -318,7 +318,7 @@ local function setUpTarget ( )
     if Config.Target == "ox" then
         exports.ox_target:addGlobalVehicle({
             {
-                label = "Sita Kendaraan",
+                label = "Confiscar veículo",
                 icon = 'fas fa-car',
                 bones = bones,
                 groups = TargetData.groups,
@@ -331,9 +331,9 @@ local function setUpTarget ( )
     elseif Config.Target == "qb" then
         exports['qb-target']:AddTargetBone(bones, {
             options = {
-                ["Sita Kendaraan"] = {
+                ["Confiscar veículo"] = {
                     icon = 'fas fa-car',
-                    label = "Sita Kendaraan",
+                    label = "Confiscar veículo",
                     action = function(veh)
                         impoundVehicle(veh)
                     end,
@@ -351,19 +351,19 @@ lib.callback.register("rhd_garage:cb_client:sendFine", function ( fine )
 
     local alert = lib.alertDialog({
         header = ("Halo %s"):format(fw.gn()),
-        content = ("anda di minta untuk membayar tagihan kendaraan anda yang di sita oleh polisi sebesar $%s"):format(fine),
+        content = ("Você é solicitado a pagar sua conta de veículo que é confiscada pela polícia de $%s"):format(fine),
         centered = true,
         cancel = true,
         labels = {
-            confirm = "Bayar",
-            cancel = "Abaikan"
+            confirm = "Oferecer",
+            cancel = "Ignorar"
         }
     })
 
     if alert == "confirm" then
         utils.createMenu({
             id = 'rhd_garage:policeImpound.payoptions',
-            title = 'PILIH METODE PEMBAYARAN',
+            title = 'Selecione o método de pagamento',
             onExit = function ()
                 continue = true
             end,
@@ -386,7 +386,7 @@ lib.callback.register("rhd_garage:cb_client:sendFine", function ( fine )
                         if success then
                             paid = true
                             continue = true
-                            utils.notify("Anda berhasil membayar denda kendaraan anda", "success")
+                            utils.notify("Você conseguiu pagar bem o seu veículo", "success")
                         else
                             continue = true
                         end
@@ -409,7 +409,7 @@ lib.callback.register("rhd_garage:cb_client:sendFine", function ( fine )
                         if success then
                             paid = true
                             continue = true
-                            utils.notify("Anda berhasil membayar denda kendaraan anda", "success")
+                            utils.notify("Você conseguiu pagar bem o seu veículo", "success")
                         else
                             continue = true
                         end
@@ -440,12 +440,12 @@ CreateThread(function()
                 local coords = v.zones.points[1]
                 local piBlip = AddBlipForCoord(coords.x, coords.y, coords.z)
                 SetBlipSprite(piBlip, v.blip.sprite or 473)
-                SetBlipScale(piBlip, 0.9)
+                SetBlipScale(piBlip, 0.7)
                 SetBlipColour(piBlip, v.blip.colour or 40)
                 SetBlipDisplay(piBlip, 4)
                 SetBlipAsShortRange(piBlip, true)
                 BeginTextCommandSetBlipName("STRING")
-                AddTextComponentString(v.label:upper())
+                AddTextComponentString(v.label)
                 EndTextCommandSetBlipName(piBlip)
             end
 

@@ -21,7 +21,9 @@ end
 ---@param type string
 ---@param duration number?
 function utils.notify(msg, type, duration)
-    exports.rhd_notify:send(msg, type, duration)
+    -- exports.rhd_notify:send(msg, type, duration)
+    lib.notify({description = msg, type = type, })
+
 end
 
 --- Show & Hide drawtext
@@ -31,13 +33,8 @@ end
 function utils.drawtext (type, text, icon)
     if type == 'show' then
         lib.showTextUI(text,{
-            position = "left-center",
+            position = "right-center",
             icon = icon or '',
-            style = {
-                borderRadius= 5,
-                backgroundColor = '#0985e3f8',
-                color = 'white'
-            }
         })
     elseif type == 'hide' then
         lib.hideTextUI()
@@ -387,6 +384,7 @@ if server then
     ---@param type string
     ---@param duration string?
     function utils.notify(src, msg, type, duration)
-        exports.rhd_notify:send(src, msg, type, duration)
+        -- exports.rhd_notify:send(src, msg, type, duration)
+        lib.notify(source, {description = msg, type = type, })
     end
 end

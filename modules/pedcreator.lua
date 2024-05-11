@@ -38,10 +38,10 @@ function pedcreator.start(zone)
     local polygon = glm.polygon.new(zone.points)
 
     local text = [[
-    [X]: Cancel
-    [Enter]: Confirm
-    [Arrow Right/Left]: Rotate Ped
-    [Mouse Scroll Up/Down]: Change Ped
+    [X]: Cancelar
+    [Enter]: Confirmar
+    [Setas Direita/Esquerda]: Rotacionar Ped
+    [Mouse Scroll Cima/Baixo]: Mudar Ped
     ]]
 
     lib.showTextUI(text)
@@ -130,12 +130,12 @@ function pedcreator.start(zone)
                             model = pedlist[pedIndex],
                             coords = vec(CurrentCoords.x, CurrentCoords.y, CurrentCoords.z, heading)
                         }
-                        utils.notify("Ped location successfully set", "success", 8000)
+                        utils.notify("Localização do PED definida com sucesso!", "success", 8000)
                         CancelPlacement()
                         if notif then notif = false end
                     else
                         if not notif then
-                            utils.notify("Can only be in the zone !", "error", 8000)
+                            utils.notify("Só pode estar na zona!", "error", 8000)
                             notif = true
                         end
                     end
