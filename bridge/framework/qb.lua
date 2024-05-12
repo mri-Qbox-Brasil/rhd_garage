@@ -88,9 +88,9 @@ RegisterNetEvent('QBCore:Player:SetPlayerData', function(PlayerData)
     }
 end)
 
--- RegisterCommand("loaded", function ()
---     fw.playerLoaded = true
--- end, false)
+RegisterCommand("loaded", function ()
+    fw.playerLoaded = true
+end, false)
 
 if isServer then
     local xPlayer = {}

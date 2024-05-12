@@ -353,7 +353,7 @@ local function openMenu ( data )
                     if DoesEntityExist(vehInArea) then return utils.notify(locale('rhd_garage:no_parking_spot'), 'error') end
     
                     VehicleShow = utils.createPlyVeh(vehModel, defaultcoords)
-                    SetEntityAlpha(VehicleShow, 120, false)
+                    SetEntityAlpha(VehicleShow, 200, false)
                     FreezeEntityPosition(VehicleShow, true)
                     SetVehicleDoorsLocked(VehicleShow, 2)
                     utils.createPreviewCam(VehicleShow)
@@ -394,6 +394,10 @@ local function openMenu ( data )
 end
 
 local function storeVeh ( data )
+    print(json.encode(data))
+    -- {"targetped":true,"spawnpoint":[{"x":105.08464050292969,"y":-1076.3994140625,"z":28.91999816894531,"w":340.0},{"x":107.84837341308594,"y":-1077.8819580078126,"z":28.91999816894531,"w":340.0},{"x":111.22987365722656,"y":-1079.630859375,"z":28.91999626159668,"w":340.0},{"x":106.56298828125,"y":-1064.118896484375,"z":28.92056465148925,"w":246.5},{"x":108.02095031738281,"y":-1060.681640625,"z":28.91999816894531,"w":246.5},{"x":109.59732818603516,"y":-1057.3714599609376,"z":28.9200210571289,"w":246.5},{"x":111.0271224975586,"y":-1053.5751953125,"z":28.9282112121582,"w":246.5}],"garage":"Garagem da Praça 1 ","type":["car","motorcycle","cycles"]}
+
+
     local myCoords = GetEntityCoords(cache.ped)
     local vehicle = cache.vehicle and cache.vehicle or lib.getClosestVehicle(myCoords)
 
