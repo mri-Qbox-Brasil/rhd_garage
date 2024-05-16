@@ -482,7 +482,7 @@ local function listGarage ()
 end
 
 CreateThread(function ()
-    while not fw.playerLoaded do print("load garage data") Wait(100) end
+    while not fw.playerLoaded do Wait(100) end
     if fw.playerLoaded then
         Zones.refresh()
         print("Garage data has been successfully loaded")
