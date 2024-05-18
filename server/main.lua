@@ -30,6 +30,7 @@ lib.callback.register('rhd_garage:cb_server:createVehicle', function (source, ve
 end)
 
 lib.callback.register('rhd_garage:cb_server:getvehowner', function (src, plate, shared, pleaseUpdate)
+    print(src, plate, shared, pleaseUpdate)
     return fw.gvobp(src, plate, {
         owner = shared
     }, pleaseUpdate)
