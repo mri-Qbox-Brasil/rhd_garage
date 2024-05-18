@@ -49,16 +49,17 @@ local function spawnvehicle ( data )
     })
     
     Entity(veh).state:set('vehlabel', data.vehicle_name)
-    if not exports.mri_Qcarkeys:HavePermanentKey(serverData.plate:trim()) then
-        exports.mri_Qcarkeys:GiveKeyItem(serverData.plate:trim(), veh)
-    end
+    -- if not exports.mri_Qcarkeys:HavePermanentKey(serverData.plate:trim()) then
+    --     exports.mri_Qcarkeys:GiveKeyItem(serverData.plate:trim(), veh)
+    -- end
     -- TriggerEvent("vehiclekeys:client:SetOwner", serverData.plate:trim())
 end
 
 local function actionMenu ( data )
     local actionData = {
         id = 'garage_action',
-        title = data.vehName:upper(),
+        title = data.plate,
+        description = data.vehicle_name,
         menu = 'garage_menu',
         onBack = destroyPreview,
         onExit = destroyPreview,
@@ -71,10 +72,10 @@ local function actionMenu ( data )
                     if data.impound then
                         utils.createMenu({
                             id = 'pay_methode',
-                            title = locale('rhd_garage:pay_methode'):upper(),
+                            title = locale('rhd_garage:pay_methode'),
                             options = {
                                 {
-                                    title = locale('rhd_garage:pay_methode_cash'):upper(),
+                                    title = locale('rhd_garage:pay_methode_cash'),
                                     icon = 'dollar-sign',
                                     description = locale('rhd_garage:pay_with_cash'),
                                     iconAnimation = Config.IconAnimation,
@@ -89,7 +90,7 @@ local function actionMenu ( data )
                                     end
                                 },
                                 {
-                                    title = locale('rhd_garage:pay_methode_bank'):upper(),
+                                    title = locale('rhd_garage:pay_methode_bank'),
                                     icon = 'fab fa-cc-mastercard',
                                     description = locale('rhd_garage:pay_with_bank'),
                                     iconAnimation = Config.IconAnimation,
@@ -122,11 +123,11 @@ local function actionMenu ( data )
                 icon = "exchange-alt",
                 iconAnimation = Config.IconAnimation,
                 metadata = {
-                    price = lib.math.groupdigits(Config.TransferVehicle.price, '.')
+                    ["Preço"] = 'R$ '.. lib.math.groupdigits(Config.TransferVehicle.price, '.')
                 },
                 onSelect = function ()
                     destroyPreview()
-                    local transferInput = lib.inputDialog(data.vehName:upper(), {
+                    local transferInput = lib.inputDialog(data.vehName, {
                         { type = 'number', label = 'Player Id', required = true },
                     })
 
@@ -134,7 +135,7 @@ local function actionMenu ( data )
                         local clData = {
                             targetSrc = transferInput[1],
                             plate = data.plate,
-                            price = Config.TransferVehicle.price,
+                            ["Preço"] = 'R$ '.. Config.TransferVehicle.price,
                             garage = data.garage
                         }
                         lib.callback('rhd_garage:cb_server:transferVehicle', false, function (success, information)
@@ -155,7 +156,7 @@ local function actionMenu ( data )
                 icon = "retweet",
                 iconAnimation = Config.IconAnimation,
                 metadata = {
-                    price = lib.math.groupdigits(Config.SwapGarage.price, '.')
+                    ["Preço"] = 'R$ '.. lib.math.groupdigits(Config.SwapGarage.price, '.')
                 },
                 onSelect = function ()
                     destroyPreview()
@@ -170,7 +171,7 @@ local function actionMenu ( data )
                         return result
                     end
 
-                    local garageInput = lib.inputDialog(data.garage:upper(), {
+                    local garageInput = lib.inputDialog(data.garage, {
                         { type = 'select', label = locale('rhd_garage:swapgarage_input_label'), options = garageTable(), required = true},
                     })
 
@@ -201,7 +202,7 @@ local function actionMenu ( data )
             icon = 'pencil',
             iconAnimation = Config.IconAnimation,
             metadata = {
-                price = lib.math.groupdigits(Config.SwapGarage.price, '.')
+                ["Preço"] = 'R$ '.. lib.math.groupdigits(Config.SwapGarage.price, '.')
             },
             onSelect = function ()
                 destroyPreview()
@@ -222,6 +223,35 @@ local function actionMenu ( data )
                         TriggerServerEvent('rhd_garage:server:saveCustomVehicleName', CNV)
                     end
                 end
+            end
+        }
+
+        actionData.options[#actionData.options+1] = {
+            title = locale('rhd_garage:givekeys'),
+            icon = 'key',
+            iconAnimation = Config.IconAnimation,
+            metadata = {
+                ["Preço"] = 'R$ '..lib.math.groupdigits(Config.GiveKeys.price, '.')
+            },
+            onSelect = function ()
+
+
+                local input = lib.alertDialog({
+                    header = 'Criar cópia de chave',
+                    content = 'Você deseja copiar a chave do seu veículo por R$'..Config.GiveKeys.price..'?',
+                    centered = true,
+                    cancel = true
+                }) == "confirm"
+                
+                if input then
+                    if fw.gm('cash') < Config.GiveKeys.price then destroyPreview() return utils.notify('Você não possui dinheiro suficiente na carteira.', 'error') end
+
+                    local success = lib.callback.await('rhd_garage:cb_server:removeMoney', false, 'cash', Config.GiveKeys.price)
+                    if success then
+                        exports.mri_Qcarkeys:GiveKeyItem(data.plate, data.entity)
+                    end
+                end
+                destroyPreview()
             end
         }
     end
@@ -313,12 +343,12 @@ local function openMenu ( data )
         if gState == 0 then
             if vehFunc.govbp(plate) then
                 disabled = true
-                description = 'STATUS: ' ..  locale('rhd_garage:veh_out_garage')
+                description = 'STATUS: ' ..  locale('rhd_garage:veh_out_garage'):upper()
             else
                 description = locale('rhd_garage:impound_price', ImpoundPrice)
             end
         elseif gState == 1 then
-            description = 'STATUS: ' ..  locale('rhd_garage:veh_in_garage')
+            description = 'STATUS: ' ..  locale('rhd_garage:veh_in_garage'):upper()
             if shared_garage then
                 description = locale('rhd_garage:shared_owner_label', pName) .. ' \n' .. 'STATUS: ' .. locale('rhd_garage:veh_in_garage')
             end
@@ -331,12 +361,12 @@ local function openMenu ( data )
                 title = vehicleLabel,
                 icon = icon,
                 disabled = disabled,
-                description = description:upper(),
+                description = description,
                 iconAnimation = Config.IconAnimation,
                 metadata = {
-                    { label = 'Fuel', value = math.floor(fuel) .. '%', progress = math.floor(fuel), colorScheme = utils.getColorLevel(math.floor(fuel))},
-                    { label = 'Body', value = math.floor(body / 10) .. '%', progress = math.floor(body / 10), colorScheme = utils.getColorLevel(math.floor(body / 10))},
-                    { label = 'Engine', value = math.floor(engine/ 10) .. '%', progress = math.floor(engine / 10), colorScheme = utils.getColorLevel(math.floor(engine / 10))}
+                    { label = '⛽ Combustível', value = math.floor(fuel) .. '%', progress = math.floor(fuel), colorScheme = utils.getColorLevel(math.floor(fuel))},
+                    { label = '🧰 Lataria', value = math.floor(body / 10) .. '%', progress = math.floor(body / 10), colorScheme = utils.getColorLevel(math.floor(body / 10))},
+                    { label = '🔧 Motor', value = math.floor(engine/ 10) .. '%', progress = math.floor(engine / 10), colorScheme = utils.getColorLevel(math.floor(engine / 10))}
                 },
                 onSelect = function ()
                     local defaultcoords = vec(GetOffsetFromEntityInWorldCoords(cache.ped, 0.0, 2.0, 0.5), GetEntityHeading(cache.ped)+90)
@@ -376,7 +406,8 @@ local function openMenu ( data )
                         impound = data.impound,
                         shared = data.shared,
                         deformation = vehDeformation,
-                        depotprice = ImpoundPrice
+                        depotprice = ImpoundPrice,
+                        entity = VehicleShow
                     })
                 end,
             }
@@ -385,7 +416,7 @@ local function openMenu ( data )
 
     if #menuData.options < 1 then 
         menuData.options[#menuData.options+1] = {
-            title = locale('rhd_garage:no_vehicles_in_garage'):upper(),
+            title = locale('rhd_garage:no_vehicles_in_garage'),
             disabled = true
         }
     end
@@ -394,7 +425,7 @@ local function openMenu ( data )
 end
 
 local function storeVeh ( data )
-    print(json.encode(data))
+    -- print(json.encode(data))
     -- {"targetped":true,"spawnpoint":[{"x":105.08464050292969,"y":-1076.3994140625,"z":28.91999816894531,"w":340.0},{"x":107.84837341308594,"y":-1077.8819580078126,"z":28.91999816894531,"w":340.0},{"x":111.22987365722656,"y":-1079.630859375,"z":28.91999626159668,"w":340.0},{"x":106.56298828125,"y":-1064.118896484375,"z":28.92056465148925,"w":246.5},{"x":108.02095031738281,"y":-1060.681640625,"z":28.91999816894531,"w":246.5},{"x":109.59732818603516,"y":-1057.3714599609376,"z":28.9200210571289,"w":246.5},{"x":111.0271224975586,"y":-1053.5751953125,"z":28.9282112121582,"w":246.5}],"garage":"Garagem da Praça 1 ","type":["car","motorcycle","cycles"]}
 
 
