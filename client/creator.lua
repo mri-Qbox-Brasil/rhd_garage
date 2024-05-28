@@ -44,7 +44,7 @@ local function createGarage()
                     },
                     required = true
                 },
-                -- { type = 'checkbox', label = "Use Blip"}, -- DESATIVADO: use o criador de blips
+                { type = 'checkbox', label = "Use Blip", disabled = true , description = "[Desativado] Utilize o script de criar blips ao invés dessa opção."}, -- DESATIVADO: use o criador de blips
                 { type = 'checkbox', label = "Impound",                                            description = "Marque se for depósito de carros apreendidos." },
                 { type = 'checkbox', label = "Compartilhada",                                      description = "Marque os carros da garagem puderem ser compartilhados." },
                 { type = 'checkbox', label = "Definir Locais de Spawn",                            description = "Defina as vagas desta garagem." },
@@ -60,6 +60,7 @@ local function createGarage()
                 },
             })
             if input then
+                print(input[7])
                 local tPed = input[7] == 'targetped'
                 local Impound = not input[5] and input[4] or false
                 local label = input[1]
@@ -81,7 +82,8 @@ local function createGarage()
                     impound = Impound,
                     shared = shared,
                     spawnPoint = sp,
-                    interaction = interact
+                    interaction = interact,
+                    vehicles = nil
                 }
 
                 utils.notify(locale("rhd_garage:notify.admin.success_create", label), "success")
@@ -557,7 +559,7 @@ CreateThread(function()
 end)
 
 AddStateBagChangeHandler("rhd_garage_zone", "global", function(bagName, key, value)
-    print(json.encode(value, { indent = true }))
+    -- print(json.encode(value, { indent = true }))
     if value then
         GarageZone = value
         Zones.refresh()

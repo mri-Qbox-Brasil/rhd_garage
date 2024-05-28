@@ -313,15 +313,14 @@ local function openMenu ( data )
         options = {}
     }
 
-    print(json.encode(data))
+    -- print(json.encode(data))
     local vehicles = exports.qbx_core:GetVehiclesByHash()
     
 
     if data.vehicles then
-        print('VEHICLES')
         for i=1, #data.vehicles do
             local v = data.vehicles[i]
-            print(v)
+            -- print(v)
             local vehModel = v
             local vehName = GetLabelText(GetDisplayNameFromVehicleModel(v))
 
@@ -522,10 +521,11 @@ local function storeVeh ( data )
         vehicle_name = Entity(vehicle).state.vehlabel
     })
 
-    if not isOwned and not string.sub(plate, 1, 3) == "MRI" then 
+    print(not isOwned, string.sub(plate, 1, 3) ~= "MRI")
+    if not isOwned and (string.sub(plate, 1, 3) ~= "MRI") then 
         return utils.notify(locale('rhd_garage:not_owned'), 'error')
     end
-    if data.vehicles[1] ~= nil then
+    if data.vehicles == {} then
         if isOwned or string.sub(plate, 1, 3) ~= "MRI" then
             return utils.notify("Você não pode estacionar aqui.", "error", 10000)
         end
@@ -537,7 +537,7 @@ local function storeVeh ( data )
     if DoesEntityExist(vehicle) then
         SetEntityAsMissionEntity(vehicle, true, true)
         DeleteVehicle(vehicle)
-        if not string.sub(plate, 1, 3) == "MRI" then
+        if string.sub(plate, 1, 3) ~= "MRI" then
             TriggerServerEvent('rhd_garage:server:updateState', { plate = plate, state = 1, garage = data.garage })
         else
             local vehiclename = string.lower(GetDisplayNameFromVehicleModel(model))
