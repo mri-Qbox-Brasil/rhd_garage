@@ -32,6 +32,7 @@ local function SaveGarage(garageData)
         gang = %s,
         impound = %s,
         shared = %s,
+        vehicles = {%s},
         interaction = %s
     },
 ]]
@@ -70,11 +71,20 @@ local function SaveGarage(garageData)
                 interaction = f:format(data.interaction)
             end
         end
+
+        local vehicles = {}
+        if data.vehicles then
+            for _, t in pairs(data.vehicles) do
+                vehicles[#vehicles+1] = ('%q'):format(tostring(t))
+            end
+        end
     
         local gType = {}
         for _, t in pairs(data.type) do
             gType[#gType+1] = ('%q'):format(tostring(t))
         end
+
+        print(json.encode(data.vehicles))
 
         result[#result+1] = Format:format(
             label,
@@ -87,6 +97,7 @@ local function SaveGarage(garageData)
             GroupFormat(data.gang),
             data.impound or 'nil',
             data.shared or 'nil',
+            table.concat(vehicles, ', ') or 'nil',
             interaction
         ):gsub('[%s]-[%w]+ = "?nil"?,?', '')
 

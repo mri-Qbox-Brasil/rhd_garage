@@ -11,6 +11,11 @@ end
 
 local function spawnvehicle ( data )
     lib.requestModel(data.model)
+    if not data.plate then
+        local random = tostring(math.random(10000, 99999))
+        data.plate = ('MRI%s'):format(random)
+    end
+
     local serverData = lib.callback.await("rhd_garage:cb_server:createVehicle", false, {
         model = data.model,
         plate = data.plate,
@@ -36,8 +41,9 @@ local function spawnvehicle ( data )
 
     SetVehicleEngineHealth(veh, data.engine + 0.0)
     SetVehicleBodyHealth(veh, data.body + 0.0)
-    utils.setFuel(veh, data.fuel)
     Deformation.set(veh, serverData.deformation)
+
+    utils.setFuel(veh, data.fuel)
 
     TriggerServerEvent("rhd_garage:server:updateState", {
         vehicle = veh,
@@ -52,13 +58,15 @@ local function spawnvehicle ( data )
     -- if not exports.mri_Qcarkeys:HavePermanentKey(serverData.plate:trim()) then
     --     exports.mri_Qcarkeys:GiveKeyItem(serverData.plate:trim(), veh)
     -- end
-    -- TriggerEvent("vehiclekeys:client:SetOwner", serverData.plate:trim())
+    if string.sub(data.plate, 1, 3) == "MRI" then
+        TriggerEvent("vehiclekeys:client:SetOwner", serverData.plate:trim())
+    end
 end
 
 local function actionMenu ( data )
     local actionData = {
         id = 'garage_action',
-        title = data.plate,
+        title = data.plate or data.vehName,
         description = data.vehicle_name,
         menu = 'garage_menu',
         onBack = destroyPreview,
@@ -116,7 +124,7 @@ local function actionMenu ( data )
         }
     }
     
-    if not data.impound then
+    if not data.impound and data.plate then
         if Config.TransferVehicle.enable then
             actionData.options[#actionData.options+1] = {
                 title = locale("rhd_garage:transferveh_title"),
@@ -305,6 +313,67 @@ local function openMenu ( data )
         options = {}
     }
 
+    print(json.encode(data))
+    local vehicles = exports.qbx_core:GetVehiclesByHash()
+    
+
+    if data.vehicles then
+        print('VEHICLES')
+        for i=1, #data.vehicles do
+            local v = data.vehicles[i]
+            print(v)
+            local vehModel = v
+            local vehName = GetLabelText(GetDisplayNameFromVehicleModel(v))
+
+
+            menuData.options[#menuData.options+1] = {
+                title = vehName,
+                icon = 'car',
+                iconColor = 'white',
+                onSelect = function ()
+                    local defaultcoords = vec(GetOffsetFromEntityInWorldCoords(cache.ped, 0.0, 2.0, 0.5), GetEntityHeading(cache.ped)+90)
+
+                    if data.spawnpoint then
+                        defaultcoords = getAvailableSP(data.spawnpoint, data.targetped)
+                    end
+
+                    if not defaultcoords then
+                        return utils.notify(locale('rhd_garage:no_parking_spot'), 'error', 8000)
+                    end
+                    
+                    local vehInArea = lib.getClosestVehicle(defaultcoords.xyz)
+                    if DoesEntityExist(vehInArea) then return utils.notify(locale('rhd_garage:no_parking_spot'), 'error') end
+    
+                    VehicleShow = utils.createPlyVeh(vehModel, defaultcoords)
+                    SetEntityAlpha(VehicleShow, 200, false)
+                    FreezeEntityPosition(VehicleShow, true)
+                    SetVehicleDoorsLocked(VehicleShow, 2)
+                    utils.createPreviewCam(VehicleShow)
+    
+                    actionMenu({
+                        prop = nil,
+                        engine = 1000,
+                        fuel = 100,
+                        body = 1000,
+                        model = vehModel,
+                        plate = nil,
+                        coords = defaultcoords,
+                        garage = data.garage,
+                        vehName = vehName,
+                        vehicle_name = nil,
+                        impound = data.impound,
+                        shared = data.shared,
+                        deformation = nil,
+                        depotprice = nil,
+                        entity = VehicleShow
+                    })
+                end,
+            }
+        end
+
+
+    end
+
     local vehData = lib.callback.await('rhd_garage:cb_server:getVehicleList', false, data.garage, data.impound, data.shared)
     
     if not vehData then
@@ -428,7 +497,6 @@ local function storeVeh ( data )
     -- print(json.encode(data))
     -- {"targetped":true,"spawnpoint":[{"x":105.08464050292969,"y":-1076.3994140625,"z":28.91999816894531,"w":340.0},{"x":107.84837341308594,"y":-1077.8819580078126,"z":28.91999816894531,"w":340.0},{"x":111.22987365722656,"y":-1079.630859375,"z":28.91999626159668,"w":340.0},{"x":106.56298828125,"y":-1064.118896484375,"z":28.92056465148925,"w":246.5},{"x":108.02095031738281,"y":-1060.681640625,"z":28.91999816894531,"w":246.5},{"x":109.59732818603516,"y":-1057.3714599609376,"z":28.9200210571289,"w":246.5},{"x":111.0271224975586,"y":-1053.5751953125,"z":28.9282112121582,"w":246.5}],"garage":"Garagem da Praça 1 ","type":["car","motorcycle","cycles"]}
 
-
     local myCoords = GetEntityCoords(cache.ped)
     local vehicle = cache.vehicle and cache.vehicle or lib.getClosestVehicle(myCoords)
 
@@ -443,6 +511,7 @@ local function storeVeh ( data )
     local fuel = utils.getFuel(vehicle)
     local engine = GetVehicleEngineHealth(vehicle)
     local body = GetVehicleBodyHealth(vehicle)
+    local model = prop.model
 
     local isOwned = lib.callback.await('rhd_garage:cb_server:getvehowner', false, plate, shared, {
         mods = prop,
@@ -453,19 +522,27 @@ local function storeVeh ( data )
         vehicle_name = Entity(vehicle).state.vehlabel
     })
 
-    if not isOwned then return
-        utils.notify(locale('rhd_garage:not_owned'), 'error')
+    if not isOwned and not string.sub(plate, 1, 3) == "MRI" then 
+        return utils.notify(locale('rhd_garage:not_owned'), 'error')
     end
-
+    if data.vehicles[1] ~= nil then
+        if isOwned or string.sub(plate, 1, 3) ~= "MRI" then
+            return utils.notify("Você não pode estacionar aqui.", "error", 10000)
+        end
+    end
     if cache.vehicle and cache.seat == -1 then
         TaskLeaveAnyVehicle(cache.ped, true, 0)
         Wait(1000)
     end
-
     if DoesEntityExist(vehicle) then
         SetEntityAsMissionEntity(vehicle, true, true)
         DeleteVehicle(vehicle)
-        TriggerServerEvent('rhd_garage:server:updateState', {plate = plate, state = 1, garage = data.garage})
+        if not string.sub(plate, 1, 3) == "MRI" then
+            TriggerServerEvent('rhd_garage:server:updateState', { plate = plate, state = 1, garage = data.garage })
+        else
+            local vehiclename = string.lower(GetDisplayNameFromVehicleModel(model))
+            TriggerServerEvent('rhd_garage:server:removeTemp', { model = vehiclename })
+        end
         utils.notify(locale('rhd_garage:success_stored'), 'success')
     end
 end

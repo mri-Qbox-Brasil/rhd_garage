@@ -38,7 +38,8 @@ function zone.refresh ()
             impound = v.impound,
             shared = v.shared,
             type = v.type,
-            spawnpoint = v.spawnPoint
+            spawnpoint = v.spawnPoint,
+            vehicles = v.vehicles
         }
 
         if type(v.interaction) == "table" then
@@ -59,6 +60,7 @@ function zone.refresh ()
                 if not zone.authorize(k, v) then return end
                 local model = v.interaction.model
                 local pc = v.interaction.coords
+                if ped then DeleteEntity(ped) ped = nil end
                 ped = utils.createTargetPed(model, pc, {
                     {
                         name = "open_garage",

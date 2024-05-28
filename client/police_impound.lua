@@ -182,7 +182,6 @@ local function openpoliceImpound ( garage )
                                         coords = vec(GetEntityCoords(cache.ped), GetEntityHeading(cache.ped)),
                                         plate = plate,
                                         deformation = deformation
-                                        
                                     }
                                     spawnvehicle( data )
                                 end
