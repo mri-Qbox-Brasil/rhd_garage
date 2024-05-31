@@ -41,7 +41,7 @@ function spawnPoint.create(zone, required)
     local polygon = glm.polygon.new(zone.points)
 
     local text = [[
-    [X]: Cancelar
+    [X]: Finalizar
     [Enter]: Confirmar
     [Setas Cima/Baixo]: Altura
     [Setas Direita/Esquerda]: Rotacionar Veículo
@@ -66,7 +66,7 @@ function spawnPoint.create(zone, required)
         while busy do
             local hit, coords, entity = RayCastGamePlayCamera(20.0)
             CurrentCoords = GetEntityCoords(curVehicle)
-            
+
             local inZone = glm.polygon.contains(polygon, CurrentCoords, zone.thickness / 4)
             local outlineColour = inZone and {255, 255, 255, 255} or {240, 5, 5, 1}
             SetEntityDrawOutline(curVehicle, true)
@@ -84,12 +84,12 @@ function spawnPoint.create(zone, required)
             DisableControlAction(0, 15, true)
             DisableControlAction(0, 172, true)
             DisableControlAction(0, 173, true)
-            
+
             if IsDisabledControlPressed(0, 174) then
                 heading = heading + 0.5
                 if heading > 360 then heading = 0.0 end
             end
-    
+
             if IsDisabledControlPressed(0, 175) then
                 heading = heading - 0.5
                 if heading < 0 then heading = 360.0 end
@@ -98,7 +98,7 @@ function spawnPoint.create(zone, required)
             if IsDisabledControlJustPressed(0, 172) then
                 prefixZ += 0.1
             end
-    
+
             if IsDisabledControlJustPressed(0, 173) then
                 prefixZ -= 0.1
             end
@@ -137,7 +137,7 @@ function spawnPoint.create(zone, required)
                     end
                 end
             end
-            
+
             if IsDisabledControlJustPressed(0, 73) then
                 if required and #vc < 1 then
                     utils.notify("Você deve criar pelo menos pontos de desova x1", "error", 8000)
@@ -159,7 +159,7 @@ function spawnPoint.create(zone, required)
                     end
                 end
             end
-            
+
             Wait(1)
         end
 
