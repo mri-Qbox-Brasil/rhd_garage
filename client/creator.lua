@@ -437,6 +437,7 @@ local function listGarage()
     local context = {
         id = 'rhd:list_garage',
         title = locale("context.admin.listgarage_title"),
+        menu = 'menu_gerencial',
         options = {
             {
                 title = locale('context.admin.addnewgarage'),
