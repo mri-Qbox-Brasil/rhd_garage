@@ -1,3 +1,5 @@
+if not lib.checkDependency('ox_lib', '3.23.1') then error('This resource requires ox_lib version 3.23.1') end
+
 CreateThread(function()
     while not GlobalState.rhd_garage do GlobalState.rhd_garage = {} Wait(10) end
     Wait(100)
@@ -9,40 +11,15 @@ lib.callback.register('rhd_garage:cb_server:removeMoney', function(src, type, am
     return fw.rm(src, type, amount)
 end)
 
-local tempVehicle = {}
-lib.callback.register('rhd_garage:cb_server:createVehicle', function (source, vehicleData )
-    local player = exports.qbx_core:GetPlayer(source)
-    local citizenid = player.PlayerData.citizenid
-    local props = {}
-    local deformation = {}
-
-    if string.sub(vehicleData.plate, 1, 3) == "MRI" then
-        if tempVehicle[citizenid] then utils.notify(source, "Você já possui um veículo alugado. Devolva-o primeiro.", "error", 10000) return { netId = 0 } end
-        tempVehicle[citizenid] = vehicleData.model
-    end
-
-    local veh = CreateVehicleServerSetter(vehicleData.model, vehicleData.vehtype, vehicleData.coords.x, vehicleData.coords.y, vehicleData.coords.z, vehicleData.coords.w)
-    Wait(100)
-    
-    while not DoesEntityExist(veh) do Wait(10) end
-    while GetVehicleNumberPlateText(veh) == '' do Wait(10) end
-    while NetworkGetEntityOwner(veh) == -1 do Wait(10) end
-    SetVehicleNumberPlateText(veh, vehicleData.plate)
-    
-    local netId, owner = NetworkGetNetworkIdFromEntity(veh), NetworkGetEntityOwner(veh)
-    local result = fw.gmdbp(vehicleData.plate)
-    props = result.prop deformation = result.deformation
-    lib.callback.await('rhd_garage:cb_client:vehicleSpawned', owner, netId, props)
-    Entity(veh).state:set("VehicleProperties", props, true)
-    return { netId = netId, props = props, plate = vehicleData.plate, deformation = deformation }
-end)
-
 lib.callback.register('rhd_garage:cb_server:getvehowner', function (src, plate, shared, pleaseUpdate)
     return fw.gvobp(src, plate, {
         owner = shared
     }, pleaseUpdate)
 end)
 
+lib.callback.register('rhd_garage:cb_server:getvehiclePropByPlate', function (_, plate)
+    return fw.gpvbp(plate)
+end)
 
 lib.callback.register('rhd_garage:cb_server:getVehicleList', function(src, garage, impound, shared)
     return fw.gpvbg(src, garage, {
@@ -57,17 +34,18 @@ end)
 
 lib.callback.register("rhd_garage:cb_server:transferVehicle", function (src, clientData)
     if src == clientData.targetSrc then
-        return false, locale("rhd_garage:transferveh_cannot_transfer")
+        return false, locale("notify.error.cannot_transfer_to_myself")
     end
 
     local tid = clientData.targetSrc
+
     if fw.rm(src, "cash", clientData.price) then
-        return false, locale("rhd_garage:transferveh_no_money")
+        return false, locale("notify.error.need_money", lib.math.groupdigits(clientData.price, '.'))
     end
     
     local success = fw.uvo(src, tid, clientData.plate)
-    if success then utils.notify(tid, locale("rhd_garage:transferveh_success_target", fw.gn(src), clientData.garage), "success") end
-    return success, locale("rhd_garage:transferveh_success_src", fw.gn(tid))
+    if success then utils.notify(tid, locale("notify.success.transferveh.target", fw.gn(src), clientData.garage), "success") end
+    return success, locale("notify.success.transferveh.source", fw.gn(tid))
 end)
 
 lib.callback.register('rhd_garage:cb_server:getVehicleInfoByPlate', function (_, plate)

@@ -7,7 +7,9 @@ local vehicleList = {
 
 local curVehicle = nil
 local busy = false
+local mode = 'raycast'
 local glm = require "glm"
+local debugzone = require 'modules.debugzone'
 
 local function CancelPlacement()
     DeleteVehicle(curVehicle)
@@ -15,24 +17,10 @@ local function CancelPlacement()
     curVehicle = nil
 end
 
-local RotationToDirection = function(rot)
-    local rotZ = math.rad(rot.z)
-    local rotX = math.rad(rot.x)
-    local cosOfRotX = math.abs(math.cos(rotX))
-    return vector3(-math.sin(rotZ) * cosOfRotX, math.cos(rotZ) * cosOfRotX, math.sin(rotX))
-end
-
-local function RayCastGamePlayCamera(distance)
-    local camRot = GetGameplayCamRot()
-    local camPos = GetGameplayCamCoord()
-    local dir = RotationToDirection(camRot)
-    local dest = camPos + (dir * distance)
-    local ray = StartShapeTestRay(camPos, dest, 17, -1, 0)
-    local _, hit, endPos, surfaceNormal, entityHit = GetShapeTestResult(ray)
-    if hit == 0 then endPos = dest end
-    return hit, endPos, entityHit, surfaceNormal
-end
-
+--- Create Spawn Points
+---@param zone OxZone
+---@param required boolean
+---@return promise?
 function spawnPoint.create(zone, required)
     if not zone then return end
     if busy then return end
@@ -42,13 +30,13 @@ function spawnPoint.create(zone, required)
 
     local text = [[
     [X]: Finalizar
-    [Enter]: Confirmar
+    [Enter]: Adicionar Pontos
     [Setas Cima/Baixo]: Altura
     [Setas Direita/Esquerda]: Rotacionar Veículo
     [Mouse Scroll Cima/Baixo]: Mudar Veículo
     ]]
 
-    lib.showTextUI(text)
+    utils.drawtext('show', text)
     lib.requestModel(vehicle, 1500)
     curVehicle = CreateVehicle(vehicle, 1.0, 1.0, 1.0, 0, false, false)
     SetEntityAlpha(curVehicle, 150, true)
@@ -58,19 +46,25 @@ function spawnPoint.create(zone, required)
     local vc = {}
     local heading = 0.0
     local prefixZ = 0.0
-
+    
     local results = promise.new()
     CreateThread(function()
         busy = true
 
         while busy do
-            local hit, coords, entity = RayCastGamePlayCamera(20.0)
-            CurrentCoords = GetEntityCoords(curVehicle)
+            local hit, coords
 
+            CurrentCoords = GetEntityCoords(curVehicle)
+            
+            if mode == 'raycast' then
+                hit, coords = utils.raycastCam(20.0)
+            end
+           
             local inZone = glm.polygon.contains(polygon, CurrentCoords, zone.thickness / 4)
             local outlineColour = inZone and {255, 255, 255, 255} or {240, 5, 5, 1}
             SetEntityDrawOutline(curVehicle, true)
             SetEntityDrawOutlineColor(outlineColour[1], outlineColour[2], outlineColour[3], outlineColour[4])
+            debugzone.start(polygon, zone.thickness)
 
             if hit == 1 then
                 SetEntityCoords(curVehicle, coords.x, coords.y, coords.z + prefixZ)
@@ -84,7 +78,8 @@ function spawnPoint.create(zone, required)
             DisableControlAction(0, 15, true)
             DisableControlAction(0, 172, true)
             DisableControlAction(0, 173, true)
-
+            DisableControlAction(0, 21, true)
+            
             if IsDisabledControlPressed(0, 174) then
                 heading = heading + 0.5
                 if heading > 360 then heading = 0.0 end
@@ -164,7 +159,7 @@ function spawnPoint.create(zone, required)
         end
 
         results:resolve(#vc > 0 and vc or false)
-        lib.hideTextUI()
+        utils.drawtext('hide')
     end)
 
     return results

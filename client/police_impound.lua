@@ -12,50 +12,23 @@ local function deletePreviewVehicle ()
     end
 end
 
+---@param data GarageVehicleData
 local function spawnvehicle ( data )
-
-    lib.requestModel(data.props.model)
-    local serverData = lib.callback.await("rhd_garage:cb_server:createVehicle", false, {
-        model = data.props.model,
-        plate = data.plate,
-        coords = data.coords,
-        vehtype = utils.getVehicleTypeByModel(data.props.model)
-    })
-
-    if serverData.netId < 1 then
-        return
-    end
-    
-    while not NetworkDoesEntityExistWithNetworkId(serverData.netId) do Wait(10) end
-    local veh = NetworkGetEntityFromNetworkId(serverData.netId)
-
-    while utils.getPlate(veh) ~= serverData.plate do
-        SetVehicleNumberPlateText(veh, serverData.plate) Wait(10)
-    end
-
-    local PedDriver = GetPedInVehicleSeat(veh, -1)
-    if PedDriver > 0 and PedDriver ~= cache.ped then
-        DeleteEntity(PedDriver)
-    end
-
-    SetVehicleOnGroundProperly(veh)
-
-    if Config.SpawnInVehicle then
-        Wait(200)
-        TaskWarpPedIntoVehicle(cache.ped, veh, -1)
-    end
-
-    if Config.FuelScript == 'ox_fuel' then
-        Entity(veh).state.fuel = serverData.props?.fuelLevel or 100
-    else
-        exports[Config.FuelScript]:SetFuel(veh, serverData.props?.fuelLevel or 100)
-    end
-       
-    Deformation.set(veh, data.deformation)
-    TriggerServerEvent("rhd_garage:server:removeFromPoliceImpound", serverData.plate)
-    TriggerEvent("vehiclekeys:client:SetOwner", serverData.plate:trim())
+    local vehData = lib.callback.await('rhd_garage:cb_server:getvehiclePropByPlate', false, data.plate)
+    if not vehData then return error('Failed to load vehicle data with number plate ' .. data.plate) end
+    local vehEntity = utils.createPlyVeh(vehData.model, data.coords)
+    SetVehicleOnGroundProperly(vehEntity)
+    if Config.SpawnInVehicle then TaskWarpPedIntoVehicle(cache.ped, vehEntity, -1) end
+    SetVehicleEngineHealth(vehEntity, vehData.engine + 0.0)
+    SetVehicleBodyHealth(vehEntity, vehData.body + 0.0)
+    utils.setFuel(vehEntity, vehData.fuel)
+    vehFunc.svp(vehEntity, vehData.mods)
+    Deformation.set(vehEntity, vehData.deformation)
+    TriggerServerEvent("rhd_garage:server:removeFromPoliceImpound", vehData.plate)
+    TriggerEvent("vehiclekeys:client:SetOwner", vehData.plate:trim())
 end
 
+---@param garage table
 local function openpoliceImpound ( garage )
     local garage = garage.label
 
@@ -82,15 +55,15 @@ local function openpoliceImpound ( garage )
             local paid = v.paid
             local date = v.date
     
-            local paidstatus = locale("rhd_garage:context.policeImpound.not_paid")
+            local paidstatus = locale("context.policeImpound.not_paid")
     
             if paid > 0 then
-                paidstatus = locale("rhd_garage:context.policeImpound.paid")
+                paidstatus = locale("context.policeImpound.paid")
             end
     
             context.options[#context.options+1] = {
                 title = ("%s [%s]"):format(vehname, plate:upper()),
-                description = locale("rhd_garage:context.policeImpound.vehdescription", fine, paidstatus),
+                description = locale("context.policeImpound.vehdescription", fine, paidstatus),
                 metadata = {
                     OWNER = owner,
                     OFFICER = officer,
@@ -119,7 +92,7 @@ local function openpoliceImpound ( garage )
                         options = {
                             {
                                 title = ("%s [%s]"):format(vehname, plate:upper()),
-                                description = locale("rhd_garage:context.policeImpound.vehdescription", fine, paidstatus),
+                                description = locale("context.policeImpound.vehdescription", fine, paidstatus),
                                 metadata = {
                                     OWNER = owner,
                                     OFFICER = officer,
@@ -132,7 +105,7 @@ local function openpoliceImpound ( garage )
 
                     if paid < 1 then
                         context2.options[#context2.options+1] = {
-                            title = locale("rhd_garage:context.policeImpound.sendBill"),
+                            title = locale("context.policeImpound.sendBill"),
                             icon = "dollar-sign",
                             iconAnimation = Config.IconAnimation,
                             onSelect = function ()
@@ -142,7 +115,7 @@ local function openpoliceImpound ( garage )
                         }
                     elseif paid > 0 then
                         context2.options[#context2.options+1] = {
-                            title = locale("rhd_garage:context.policeImpound.takeOutVeh"),
+                            title = locale("context.policeImpound.takeOutVeh"),
                             icon = "car",
                             iconAnimation = Config.IconAnimation,
                             onSelect = function ()
@@ -222,8 +195,13 @@ local function impoundVehicle (vehicle)
     local vehdata = vehFunc.gvibp(plate:trim())
     local garageList = checkAvailableGarage()
 
-    if not vehdata then return end
-    if #garageList < 1 then return end
+    if not vehdata then return
+        utils.notify(locale('notify.error.npc_vehicle'), 'error')
+    end
+
+    if #garageList < 1 then return
+        utils.notify(locale('no_available_policeimpound_location'), 'error', 12000)
+    end
 
     local vehName = vehdata.vehicle_name or fw.gvn(vehdata.vehicle)
     local customvehName = CNV[plate:trim()] and CNV[plate:trim()].name
@@ -235,10 +213,10 @@ local function impoundVehicle (vehicle)
     local officerName = fw.gn()
 
     local input = lib.inputDialog(("%s [%s]"):format(vehlabel, plate:upper()), {
-        { type = 'input', label = 'PROPRIETÁRIO', placeholder = ownerName:upper(), disabled = true },
-        { type = 'number', label = 'Comprar', required = true, default = 10000, min = 1, max = 1000000 },
-        { type = 'select', label = 'Garagem de confisco', required = true, options = garageList, default = garageList[1] },
-        { type = 'date', label = 'No confisco chegou?', icon = {'far', 'calendar'}, default = true, format = "DD/MM/YYYY" }
+        { type = 'input', label = locale('input.police_impound.veh_owner'), placeholder = ownerName:upper(), disabled = true },
+        { type = 'number', label = locale('input.police_impound.fine'), required = true, default = 10000, min = 1, max = 1000000 },
+        { type = 'select', label = locale('input.police_impound.confiscate_garage_loc'), options = garageList, default = garageList[1] },
+        { type = 'date', label = locale('input.police_impound.confiscate_until'), icon = {'far', 'calendar'}, default = true, format = "DD/MM/YYYY" }
     })
     
     if input then
@@ -257,7 +235,7 @@ local function impoundVehicle (vehicle)
 
         if lib.progressBar({
             duration = 5000,
-            label = "Confiscando um veículo",
+            label = locale('progressbar.confiscate_vehicle'),
             useWhileDead = false,
             canCancel = true,
             disable = {
@@ -290,7 +268,7 @@ local function impoundVehicle (vehicle)
             lib.callback('rhd_garage:cb_server:policeImpound.impoundveh', false, function ( success )
                 SetEntityAsMissionEntity(vehicle, true, true)
                 DeleteVehicle(vehicle)
-                utils.notify("O veículo foi confiscado com sucesso!", "success")
+                utils.notify(locale('notify.success.confiscate_vehicle', ownerName, input[3]), "success")
             end, sendToServer)
 
             ClearPedTasks(cache.ped)
@@ -313,11 +291,14 @@ local function setUpTarget ( )
         'bonnet',
         'boot'
     }
+
     local TargetData = Config.PoliceImpound.Target
+    local TargetLable = locale('target.confiscate_veh')
+
     if Config.Target == "ox" then
         exports.ox_target:addGlobalVehicle({
             {
-                label = "Confiscar veículo",
+                label = TargetLable,
                 icon = 'fas fa-car',
                 bones = bones,
                 groups = TargetData.groups,
@@ -330,9 +311,9 @@ local function setUpTarget ( )
     elseif Config.Target == "qb" then
         exports['qb-target']:AddTargetBone(bones, {
             options = {
-                ["Confiscar veículo"] = {
+                [TargetLable] = {
                     icon = 'fas fa-car',
-                    label = "Confiscar veículo",
+                    label = TargetLable,
                     action = function(veh)
                         impoundVehicle(veh)
                     end,
@@ -349,34 +330,34 @@ lib.callback.register("rhd_garage:cb_client:sendFine", function ( fine )
     local paid, continue = false, false
 
     local alert = lib.alertDialog({
-        header = ("Halo %s"):format(fw.gn()),
-        content = ("Você é solicitado a pagar sua conta de veículo que é confiscada pela polícia de $%s"):format(fine),
+        header = locale('input.police_impound.fine_header', fw.gn()),
+        content = locale('input.police_impound.fine_content', lib.math.groupdigits(fine, '.')),
         centered = true,
         cancel = true,
         labels = {
-            confirm = "Oferecer",
-            cancel = "Ignorar"
+            confirm = locale('input.police_impound.fine_pay'),
+            cancel = locale('input.police_impound.fine_ignore')
         }
     })
 
     if alert == "confirm" then
         utils.createMenu({
             id = 'rhd_garage:policeImpound.payoptions',
-            title = 'Selecione o método de pagamento',
+            title = locale('context.insurance.pay_methode_header'):upper(),
             onExit = function ()
                 continue = true
             end,
             options = {
                 {
-                    title = locale('rhd_garage:pay_methode_cash'):upper(),
+                    title = locale('context.insurance.pay_methode_cash_title'):upper(),
                     icon = 'dollar-sign',
                     iconAnimation = Config.IconAnimation,
-                    description = locale('rhd_garage:pay_with_cash'),
+                    description = locale('context.insurance.pay_methode_cash_title_desc'),
                     onSelect = function ()
 
                         if fw.gm('cash') < fine then
                             continue = true
-                            utils.notify(locale('rhd_garage:not_enough_cash_policeImpound'), 'error')
+                            utils.notify(locale('notify.error.not_enough_cash'), 'error')
                             return
                         end
 
@@ -392,14 +373,14 @@ lib.callback.register("rhd_garage:cb_client:sendFine", function ( fine )
                     end
                 },
                 {
-                    title = locale('rhd_garage:pay_methode_bank'):upper(),
+                    title = locale('context.insurance.pay_methode_bank_title'):upper(),
                     icon = 'fab fa-cc-mastercard',
                     iconAnimation = Config.IconAnimation,
-                    description = locale('rhd_garage:pay_with_bank'),
+                    description = locale('context.insurance.pay_methode_bank_title_desc'),
                     onSelect = function ()  
                         if fw.gm('bank') < fine then
                             continue = true
-                            utils.notify(locale('rhd_garage:not_enough_bank_policeImpound'), 'error') 
+                            utils.notify(locale('notify.error.not_enough_bank'), 'error') 
                             return
                         end
 
@@ -457,7 +438,7 @@ CreateThread(function()
                         utils.drawtext('show', v.label:upper(), 'warehouse')
                         radFunc.create({
                             id = "open_garage_pi",
-                            label = locale("rhd_garage:open_garage"),
+                            label = locale("garage.open"),
                             icon = "warehouse",
                             event = "rhd_garage:radial:open_policeimpound",
                             args = {
