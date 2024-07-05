@@ -131,7 +131,7 @@
     },
     "command": {
         "admin": {
-            "garagelist": "listagaragens",
+            "garagelist": "garagelist",
             "garagelistHelp": "Ver lista de todas as garagens (Apenas Admin)"
         }
     },
