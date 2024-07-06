@@ -29,6 +29,28 @@ local function destroyPreview()
     end
 end
 
+local function swapEnabled(from)
+    local fromJob = GarageZone[from]['job']
+    local fromGang = GarageZone[from]['gang']
+
+    if GarageZone[from]['vehicles'] and #GarageZone[from]['vehicles'] > 0 then
+        return false
+    end
+
+    return not (fromJob or fromGang)
+end
+
+local function canSwapVehicle(to)
+    local toJob = GarageZone[to]['job']
+    local toGang = GarageZone[to]['gang']
+
+    if GarageZone[to]['vehicles'] and #GarageZone[to]['vehicles'] > 0 then
+        return false
+    end
+
+    return not(toJob or toGang)
+end
+
 --- Spawn Vehicle
 ---@param data GarageVehicleData
 local function spawnvehicle ( data )
@@ -327,7 +349,7 @@ local function openMenu ( data )
                     end
 
                     if not defaultcoords then
-                        return utils.notify(locale('rhd_garage:no_parking_spot'), 'error', 8000)
+                        return utils.notify(locale('notify.error.no_parking_spot'), 'error', 8000)
                     end
 
                     local vehInArea = lib.getClosestVehicle(defaultcoords.xyz)

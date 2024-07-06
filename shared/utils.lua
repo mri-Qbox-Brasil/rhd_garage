@@ -269,6 +269,7 @@ end
 ---@param network? boolean
 ---@return integer?
 function utils.createPlyVeh ( model, coords, cb, network )
+    print(model)
     network = network == nil and true or network
     lib.requestModel(model, 1500)
     local veh = CreateVehicle(model, coords.x, coords.y, coords.z, coords.w, network, false)

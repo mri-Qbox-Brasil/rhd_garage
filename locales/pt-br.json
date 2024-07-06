@@ -54,7 +54,8 @@
             "owner_label": "Proprietário: %s",
             "change_veh_name" : "Alterar Nome do Veículo",
             "swapgarage" : "Trocar Garagem",
-            "transferveh_title" : "Transferir Veículo"
+            "transferveh_title" : "Transferir Veículo",
+            "vehicle_keys": "Tirar cópia da Chave"
         },
         "admin": {
             "addnewgarage": "Adicionar Nova Garagem (Apenas Admin)",
