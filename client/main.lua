@@ -34,8 +34,16 @@ end
 --- Spawn Vehicle
 ---@param data GarageVehicleData
 local function spawnvehicle ( data )
-    local vehData = lib.callback.await('rhd_garage:cb_server:getvehiclePropByPlate', false, data.plate)
-    if not vehData then return error('Failed to load vehicle data with number plate ' .. data.plate) end
+    local vehData = {
+        model = data.model
+    }
+    if data.plate then
+        local vehData = lib.callback.await('rhd_garage:cb_server:getvehiclePropByPlate', false, data.plate)
+        if not vehData then return error('Failed to load vehicle data with number plate ' .. data.plate) end
+    end
+    if Config.InDevelopment then
+        print(json.encode(data))
+    end
     local vehEntity = utils.createPlyVeh(vehData.model, data.coords)
     SetVehicleOnGroundProperly(vehEntity)
     if Config.SpawnInVehicle then TaskWarpPedIntoVehicle(cache.ped, vehEntity, -1) end

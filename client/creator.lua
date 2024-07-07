@@ -445,7 +445,7 @@ local function setVehicles(garage)
         value.vehicles = input[1] or {}
         GarageZone[key].vehicles = value.vehicles
         utils.notify("Lista de Veículos alterada com sucesso!", "success", 10000)
-        Zones.save(GarageZone)
+        gzf.save( GarageZone )
     end
 end
 
@@ -485,14 +485,14 @@ local function listGarage()
                                 index = k
                             }
                         },
-                        -- {
-                        --     title = locale("context.admin.blip_setting"),
-                        --     icon = "map",
-                        --     onSelect = setBlip,
-                        --     args = {
-                        --         index = k
-                        --     }
-                        -- },
+                        {
+                            title = locale("context.admin.blip_setting"),
+                            icon = "map",
+                            onSelect = setBlip,
+                            args = {
+                                index = k
+                            }
+                        },
                         {
                             title = locale("context.admin.options_changelocation"),
                             icon = "location-dot",
