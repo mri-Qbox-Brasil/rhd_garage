@@ -1,14 +1,14 @@
+gzf = {}
+
 local CreatedZone = {}
-local zone = {}
 local ped = nil
 local stui = false
-local blips = lib.load('client.blip')
 
 --- Job & Gang Checking
 ---@param key string
 ---@param val table
 ---@return boolean
-function zone.authorize(key, val)
+function gzf.authorize(key, val)
     if not val.impound then
         if val.gang then if not utils.GangCheck({garage = key, gang = val.gang}) then return false end end
         if val.job then if not utils.JobCheck({garage = key, job = val.job}) then return false end end
@@ -17,10 +17,10 @@ function zone.authorize(key, val)
     return true
 end
 
-function zone.refresh ()
+function gzf.refresh ()
     if not GarageZone or type(GarageZone) ~= "table" then return end
 
-    blips.refresh(GarageZone)
+    gb.refresh(GarageZone)
     if next(CreatedZone) then
         for k, v in pairs(CreatedZone) do
             v:remove()
@@ -51,13 +51,13 @@ function zone.refresh ()
                     stui = true
                 end
                 if IsControlJustPressed(0, 38) and cache.vehicle then
-                    if not zone.authorize(k, v) then return end
+                    if not gzf.authorize(k, v) then return end
                     exports.rhd_garage:storeVehicle(args)
                 end
             end
 
             function zoneOptions:onEnter()
-                if not zone.authorize(k, v) then return end
+                if not gzf.authorize(k, v) then return end
                 local model = v.interaction.model
                 local pc = v.interaction.coords
                 if ped then DeleteEntity(ped) ped = nil end
@@ -85,7 +85,7 @@ function zone.refresh ()
             function zoneOptions:inside()
                 if IsControlJustPressed(0, 38) then
 
-                    if not zone.authorize(k, v) then
+                    if not gzf.authorize(k, v) then
                         return
                     end
 
@@ -98,7 +98,7 @@ function zone.refresh ()
             end
 
             function zoneOptions:onEnter()
-                if not zone.authorize(k, v) then return end
+                if not gzf.authorize(k, v) then return end
                 local dl = ('[E] - %s'):format(k)
                 utils.drawtext('show', dl, 'warehouse')
             end
@@ -108,8 +108,8 @@ function zone.refresh ()
             end
         elseif v.interaction == "radial" then
             function zoneOptions:onEnter()
-                if not zone.authorize(k, v) then return end
-                utils.drawtext('show', k, 'warehouse')
+                if not gzf.authorize(k, v) then return end
+                utils.drawtext('show', k:upper(), 'warehouse')
 
                 radFunc.create({
                     id = "open_garage",
@@ -156,8 +156,6 @@ lib.onCache('vehicle', function(value)
     stui = false
 end)
 
-function zone.save ( data )
+function gzf.save ( data )
     TriggerServerEvent("rhd_garage:server:saveGarageZone", data)
 end
-
-return zone

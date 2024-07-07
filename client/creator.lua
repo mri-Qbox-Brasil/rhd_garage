@@ -1,41 +1,47 @@
----@class OxZone
----@field points vector3[]
----@field thickness number
-
-
-local Zones = lib.load('client.zone')
-local Zones_Creator = lib.load('modules.zone')
-local spawnPoint = lib.load('modules.spawnpoint')
-local pedcreator = lib.load('modules.pedcreator')
+local zones = require 'modules.zone'
+local spawnPoint = require 'modules.spawnpoint'
+local pedcreator = require 'modules.pedcreator'
 
 --- Blip Input
 ---@param impound boolean
 ---@return promise
-local function blipInput(impound)
+local function blipInput(impound, gLabel)
     local p = promise.new()
     CreateThread(function()
-        local results = { type = impound and 68 or 357, color = 3 }
+        ---@class BlipData
+        local br = {}
+        
+        ::tryAgain::
         local blipinput = lib.inputDialog('BLIP', {
-            { type = 'number', label = locale("input.admin.creator_bliptype"), placeholder = '357'},
-            { type = 'number', label = locale("input.admin.creator_blipcolor"), placeholder = '3'},
+            { type = 'number', label = locale("input.admin.creator_bliptype"), required = true, default = impound and 68 or 357},
+            { type = 'number', label = locale("input.admin.creator_blipcolor"), required = true, default = 3},
+            { type = 'input', label = locale("input.admin.creator_bliplabel"), required = true, default = gLabel },
         })
 
         local hi = blipinput
-        results.type = hi and hi[1] or results.type
-        results.color = hi and hi[2] or results.color
-        p:resolve(results)
-    end)
+        if not hi then
+            return
+        end
 
-    return p
+        if hi[3]:isEmpty() then
+            goto tryAgain
+        end
+
+        br.type = hi[1]
+        br.color = hi[2]
+        br.label = hi[3]
+        p:resolve(br)
+    end)
+    return Citizen.Await(p)
 end
 
 --- Create garage input
-local function createGarage()
-    Zones_Creator.startCreator({
+local function createGarage ()
+    zones.startCreator({
         type = "poly",
-        onCreated = function (zones)
-            local input = lib.inputDialog('Criação de Garagens', {
-                { type = 'input', label = locale("input.admin.creator_labelgarage"), placeholder = 'Murai Garage', required = true },
+        onCreated = function (zones) ---@param zones OxZone
+            local input = lib.inputDialog('RHD GARAGE (Creator)', {
+                { type = 'input', label = locale("input.admin.creator_labelgarage"), placeholder = 'Alta Garage', required = true },
                 { type = 'multi-select', label = locale("input.admin.creator_typevehicle"), options = {
                     {value = "car", label = "Carros"},
                     {value = "boat", label = "Barcos"},
@@ -60,14 +66,14 @@ local function createGarage()
                 local Impound = not input[5] and input[4] or false
                 local label = input[1]
                 local gtype = input[2]
-                local blip = input[3] and Citizen.Await(blipInput(Impound)) or nil
+                local blip = input[3] and blipInput(Impound, label) or nil
                 local shared = input[5]
-                local sp = input[6] and Citizen.Await(spawnPoint.create(zones --[[@as OxZone]], true)) or nil
-                local interact = tPed and Citizen.Await(pedcreator.start(zones --[[@as OxZone]])) or input[7]
+                local sp = input[6] and spawnPoint.create(zones, false) or nil
+                local interact = tPed and pedcreator.start(zones) or input[7]
 
-                if tPed and not input[6] then
+                if tPed and not sp then
                     Wait(1000)
-                    sp = Citizen.Await(spawnPoint.create(zones --[[@as OxZone]], true)) or nil
+                    sp = spawnPoint.create(zones, true) or nil
                 end
 
                 GarageZone[label] = {
@@ -82,7 +88,7 @@ local function createGarage()
                 }
                 
                 utils.notify(locale("notify.admin.success_create", label:upper()), "success")
-                Zones.save( GarageZone )
+                gzf.save( GarageZone )
             end
         end
     })
@@ -93,7 +99,7 @@ end
 local function delete(garage)
     GarageZone[garage.index] = nil
     utils.notify(locale("notify.admin.success_deleted", garage.index), "success")
-    Zones.save( GarageZone )
+    gzf.save( GarageZone )
 end
 
 --- Set blip garage
@@ -110,19 +116,29 @@ local function setBlip(garage)
             {
                 title = locale("context.admin.blip_edit"),
                 icon = "pen-to-square",
-                onSelect = function()
+                onSelect = function ()
+                    local gBlip = GarageZone[garage.index].blip
+
+                    local placeholder = {
+                        type = gBlip and gBlip.type or '',
+                        color = gBlip and gBlip.color or '',
+                        label = gBlip and gBlip.label or garage.index
+                    }
+
                     local blipinput = lib.inputDialog('BLIP', {
-                        { type = 'number', label = locale("input.admin.creator_bliptype"), required = true },
-                        { type = 'number', label = locale("input.admin.creator_blipcolor"), required = true },
+                        { type = 'number', label = locale("input.admin.creator_bliptype"), required = true, default = placeholder.type },
+                        { type = 'number', label = locale("input.admin.creator_blipcolor"), required = true, default = placeholder.color },
+                        { type = 'input', label = locale("input.admin.creator_bliplabel"), required = true, default = placeholder.label },
                     })
 
                     if blipinput then
                         GarageZone[garage.index].blip = {
                             type = blipinput[1],
-                            color = blipinput[2]
+                            color = blipinput[2],
+                            label = blipinput[3]
                         }
                         utils.notify(locale("notify.admin.success_editblip"), "success")
-                        Zones.save( GarageZone )
+                        gzf.save( GarageZone )
                     end
                 end
             },
@@ -131,8 +147,8 @@ local function setBlip(garage)
                 icon = "trash",
                 onSelect = function()
                     GarageZone[garage.index].blip = nil
-                    utils.notify("Blip foi excluído com sucesso", "success")
-                    Zones.save(GarageZone)
+                    utils.notify("Blip berhasil di hapus", "success")
+                    gzf.save( GarageZone )
                 end
             }
         }
@@ -143,18 +159,18 @@ end
 --- Change garage locations
 ---@param garage {index: string}
 local function changeLocation(garage)
-    Zones_Creator.startCreator({
+    zones.startCreator({
         type = "poly",
-        onCreated = function(zones)
+        onCreated = function (zones) ---@param zones OxZone
             GarageZone[garage.index].zones = zones
             utils.notify(locale("notify.admin.success_changelocation"), "success")
-            Zones.save( GarageZone )
+            gzf.save( GarageZone )
         end
     })
 end
 
 --- Teleport to garage location
----@param garage {index: string, value: table}
+---@param garage {index: string, value: GarageData}
 local function teleportToLocation(garage)
     local data = garage.value
     local coords = data.zones.points[1]
@@ -165,7 +181,7 @@ local function teleportToLocation(garage)
 end
 
 --- Change garage label
----@param garage {index: string, value: table}
+---@param garage {index: string, value: GarageData}
 local function changeGarageLabel(garage)
     local inputLabel = lib.inputDialog(locale("input.admin.header_changelabel"), {
         { type = 'input', label = locale("input.admin.label_changelabel"), placeholder = 'Alta Garage, Pilbox Garage, Etc', required = true, min = 1 },
@@ -175,12 +191,12 @@ local function changeGarageLabel(garage)
         GarageZone[inputLabel[1]] = garage.value
         GarageZone[garage.index] = nil
         utils.notify(locale("notify.admin.success_changelabel", inputLabel[1]))
-        Zones.save( GarageZone )
+        gzf.save( GarageZone )
     end
 end
 
 --- Edit the spawn point
----@param garage {index:string, value:table}
+---@param garage {index:string, value:GarageData}
 local function setspawnpoint(garage)
     local asp = GarageZone[garage.index].spawnPoint or {}
     local noEmpty = asp and #asp > 0
@@ -211,11 +227,11 @@ local function setspawnpoint(garage)
         title = "Add Point",
         icon = "plus",
         onSelect = function ()
-            local pr = Citizen.Await(spawnPoint.create(garage.value.zones))
+            local pr = spawnPoint.create(garage.value.zones, true, asp)
             if not pr then return end
             GarageZone[garage.index].spawnPoint = utils.mergeArray(asp, pr)
             utils.notify("The spawn point has been successfully set", "success", 8000)
-            Zones.save(GarageZone)
+            gzf.save(GarageZone)
         end
     }
 
@@ -238,8 +254,8 @@ local function setspawnpoint(garage)
                         if #GarageZone[garage.index].spawnPoint < 1 then
                             GarageZone[garage.index].spawnPoint = nil
                         end
-
-                        Zones.save(GarageZone)
+                        
+                        gzf.save(GarageZone)
                     end
                 end
             end
@@ -249,7 +265,7 @@ local function setspawnpoint(garage)
 end
 
 --- Add & Remove job
----@param garage {index: string, value: table}
+---@param garage {index: string, value: GarageData}
 local function jobOptions(garage)
     local key = garage.index
     local value = garage.value
@@ -284,7 +300,7 @@ local function jobOptions(garage)
 
                                     GarageZone[key].job = value.job
                                     utils.notify(locale("notify.admin.success_deleted_access"), "success")
-                                    Zones.save( GarageZone )
+                                    gzf.save( GarageZone )
                                 end
                             }
                         }
@@ -309,7 +325,7 @@ local function jobOptions(garage)
                 value.job[input[1]] = tonumber(input[2])
                 GarageZone[key].job = value.job
                 utils.notify(locale("notify.admin.success_added_access", input[1]))
-                Zones.save( GarageZone )
+                gzf.save( GarageZone )
             end
         end
     }
@@ -318,7 +334,7 @@ local function jobOptions(garage)
 end
 
 --- Add & Remove gang
----@param garage {index: string, value: table}
+---@param garage {index: string, value: GarageData}
 local function gangOptions(garage)
     local key = garage.index
     local value = garage.value
@@ -353,7 +369,7 @@ local function gangOptions(garage)
 
                                     GarageZone[key].gang = value.gang
                                     utils.notify(locale("notify.admin.success_deleted_access"), "success")
-                                    Zones.save( GarageZone )
+                                    gzf.save( GarageZone )
                                 end
                             }
                         }
@@ -378,7 +394,7 @@ local function gangOptions(garage)
                 value.gang[input[1]] = tonumber(input[2])
                 GarageZone[key].gang = value.gang
                 utils.notify(locale("notify.admin.success_added_access", input[1]))
-                Zones.save( GarageZone )
+                gzf.save( GarageZone )
             end
         end
     }
@@ -451,7 +467,7 @@ local function listGarage()
         context.options[#context.options + 1] = {
             title = k,
             icon = "warehouse",
-            description = locale("context.admin.listgarage_description", v.impound and "Impound" or v.shared and "Shared" or "Public", utils.garageType("getstring", v.type)),
+            description = locale("context.admin.listgarage_description", v.impound and "Impound" or v.shared and "Shared" or "Public", utils.garageType(v.type)),
             onSelect = function ()
                 local context2 = {
                     id = "rhd:action_garage",
@@ -563,16 +579,14 @@ CreateThread(function ()
     end
     
     if fw.playerLoaded then
-        Zones.refresh()
+        gzf.refresh()
         lib.print.info("Garage data has been successfully loaded")
     end
 end)
 
-AddStateBagChangeHandler("rhd_garage_zone", "global", function (bagName, key, value)
-    if value then
-        GarageZone = value
-        Zones.refresh()
-    end
+RegisterNetEvent('rhd_garage:client:syncConfig', function(newconfig)
+    GarageZone = newconfig
+    gzf.refresh()
 end)
 
 RegisterNetEvent("rhd_garage:client:garagelist", listGarage)

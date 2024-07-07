@@ -104,6 +104,7 @@
             "creator_typevehicle": "Tipo de Veículo",
             "creator_bliptype": "Tipo de Blip",
             "creator_blipcolor": "Cor do Blip",
+            "creator_bliplabel": "Nome do Blip",
             "header_changelabel": "Editar Rótulo da Garagem",
             "label_changelabel": "Novo Rótulo",
             "garage_access": "Acesso à Garagem",

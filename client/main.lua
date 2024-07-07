@@ -1,25 +1,5 @@
----@class GarageVehicleData
----@field garage? string Garage Name
----@field type? string[] Garage Class
----@field impound? boolean Impound Garage|Insurance
----@field shared? boolean Shared Garage
----@field spawnpoint? vector3[] Garage Spawn Point
----@field targetped? boolean Garage Using Ped
----@field depotprice? number Depot Price
----@field props? table Vehicle Properties
----@field deformation? table Vehicle Deformation
----@field body? number Vehicle BodyHealth
----@field engine? number Vehicle EngineHealth
----@field fuel? number Vehicle Fuel Level
----@field plate? string Vehicle Plate
----@field vehName? string Vehicle Name 1
----@field vehicle_name? string Vehicle Name 2
----@field model? string|integer Vehicle Model
----@field coords? vector3|vector4 Vehicle Spawn Coords
-
-
 local VehicleShow = nil
-local Deformation = lib.load('modules.deformation')
+local Deformation = require 'modules.deformation'
 
 local function destroyPreview()
     if VehicleShow and DoesEntityExist(VehicleShow) then
@@ -240,7 +220,6 @@ local function actionMenu ( data )
                         CNV[data.plate] = {
                             name = input[1]
                         }
-
                         TriggerServerEvent('rhd_garage:server:saveCustomVehicleName', CNV)
                     end
                 end
@@ -286,30 +265,32 @@ end
 ---@return vector4?
 local function getAvailableSP(point, targetPed)
     local results = nil
-    local targetCoords = vec(GetOffsetFromEntityInWorldCoords(cache.ped, 0.0, 2.0, 0.5))
+    local offset = GetOffsetFromEntityInWorldCoords(cache.ped, 0.0, 2.0, 0.5)
 
     if type(point) ~= "table" then
         return
     end
 
-    if #point > 0 then
-        for i=1, #point do
-            local c = point[i]
-            local vec3 = vec(c.x, c.y, c.z)
-            local dist = #(targetCoords - vec(vec3.x, vec3.y, vec3.z))
-            local closestveh = lib.getClosestVehicle(vec3, 3.0, true)
-            if not targetPed then
-                if not closestveh and dist < 3.0 then
-                    results = c
-                    break
-                end
-            else
-                if not closestveh then
-                    results = c
-                    break
-                end
-
+    if #point < 1 then
+        return
+    end
+    
+    for i=1, #point do
+        local c = point[i]
+        local sp = vec(c.x, c.y, c.z)
+        local dist = #(offset - sp)
+        local closestveh = lib.getClosestVehicle(sp, 3.0, true)
+        if not targetPed then
+            if not closestveh and dist < 3.5 then
+                results = vec(c.x, c.y, c.z, c.w)
+                break
             end
+        else
+            if not closestveh then
+                results = vec(c.x, c.y, c.z, c.w)
+                break
+            end
+            
         end
     end
 
@@ -419,8 +400,7 @@ local function openMenu ( data )
         plate = fakeplate and fakeplate:trim() or plate:trim()
 
         local vehicleClass = GetVehicleClassFromName(vehModel)
-        local vehicleType = utils.classCheck(vehicleClass)
-        local icon = Config.Icons[vehicleType]
+        local icon = Config.Icons[vehicleClass] or 'car'
         local ImpoundPrice = dp > 0 and dp or Config.ImpoundPrice[vehicleClass]
 
         if gState == 0 then
@@ -438,63 +418,58 @@ local function openMenu ( data )
         end
 
         local vehicleLabel = ('%s [ %s ]'):format(vehlabel, plate)
+        menuData.options[#menuData.options+1] = {
+            title = vehicleLabel,
+            icon = icon,
+            disabled = disabled,
+            description = description:upper(),
+            iconAnimation = Config.IconAnimation,
+            metadata = {
+                { label = '⛽ Combustível', value = math.floor(fuel) .. '%', progress = math.floor(fuel), colorScheme = utils.getColorLevel(math.floor(fuel))},
+                { label = '🧰 Lataria', value = math.floor(body / 10) .. '%', progress = math.floor(body / 10), colorScheme = utils.getColorLevel(math.floor(body / 10))},
+                { label = '🔧 Motor', value = math.floor(engine/ 10) .. '%', progress = math.floor(engine / 10), colorScheme = utils.getColorLevel(math.floor(engine / 10))}
+            },
+            onSelect = function ()
+                local defaultcoords = vec(GetOffsetFromEntityInWorldCoords(cache.ped, 0.0, 2.0, 0.5), GetEntityHeading(cache.ped)+90)
 
-        if utils.garageType("check", data.type, vehicleType) then
-            menuData.options[#menuData.options+1] = {
-                title = vehicleLabel,
-                icon = icon,
-                disabled = disabled,
-                description = description,
-                iconAnimation = Config.IconAnimation,
-                metadata = {
-                    { label = '⛽ Combustível', value = math.floor(fuel) .. '%', progress = math.floor(fuel), colorScheme = utils.getColorLevel(math.floor(fuel))},
-                    { label = '🧰 Lataria', value = math.floor(body / 10) .. '%', progress = math.floor(body / 10), colorScheme = utils.getColorLevel(math.floor(body / 10))},
-                    { label = '🔧 Motor', value = math.floor(engine/ 10) .. '%', progress = math.floor(engine / 10), colorScheme = utils.getColorLevel(math.floor(engine / 10))}
-                },
-                onSelect = function ()
-                    local defaultcoords = vec(GetOffsetFromEntityInWorldCoords(cache.ped, 0.0, 2.0, 0.5), GetEntityHeading(cache.ped)+90)
+                if data.spawnpoint then
+                    defaultcoords = getAvailableSP(data.spawnpoint, data.targetped) --[[@as vector4]]
+                end
 
-                    if data.spawnpoint then
-                        defaultcoords = getAvailableSP(data.spawnpoint, data.targetped) --[[@as vector4]]
-                    end
+                if not defaultcoords then
+                    return utils.notify(locale('notify.error.no_parking_spot'), 'error', 8000)
+                end
+                
+                local vehInArea = lib.getClosestVehicle(defaultcoords.xyz)
+                if DoesEntityExist(vehInArea) then return utils.notify(locale('notify.error.no_parking_spot'), 'error') end
 
-                    if not defaultcoords then
-                        return utils.notify(locale('notify.error.no_parking_spot'), 'error', 8000)
-                    end
+                VehicleShow = utils.createPlyVeh(vehModel, defaultcoords)
+                FreezeEntityPosition(VehicleShow, true)
+                SetVehicleDoorsLocked(VehicleShow, 2)
+                utils.createPreviewCam(VehicleShow)
 
-                    local vehInArea = lib.getClosestVehicle(defaultcoords.xyz)
-                    if DoesEntityExist(vehInArea) then return utils.notify(locale('notify.error.no_parking_spot'), 'error') end
-    
-                    VehicleShow = utils.createPlyVeh(vehModel, defaultcoords)
-                    SetEntityAlpha(VehicleShow, 200, false)
-                    FreezeEntityPosition(VehicleShow, true)
-                    SetVehicleDoorsLocked(VehicleShow, 2)
-                    utils.createPreviewCam(VehicleShow)
+                if vehProp and next(vehProp) then
+                    vehFunc.svp(VehicleShow, vehProp)
+                end
 
-                    if vehProp and next(vehProp) then
-                        vehFunc.svp(VehicleShow, vehProp)
-                    end
-
-                    actionMenu({
-                        prop = vehProp,
-                        engine = engine,
-                        fuel = fuel,
-                        body = body,
-                        model = vehModel,
-                        plate = plate,
-                        coords = defaultcoords,
-                        garage = data.garage,
-                        vehName = vehicleLabel,
-                        vehicle_name = vehlabel,
-                        impound = data.impound,
-                        shared = data.shared,
-                        deformation = vehDeformation,
-                        depotprice = ImpoundPrice,
-                        entity = VehicleShow
-                    })
-                end,
-            }
-        end
+                actionMenu({
+                    prop = vehProp,
+                    engine = engine,
+                    fuel = fuel,
+                    body = body,
+                    model = vehModel,
+                    plate = plate,
+                    coords = defaultcoords,
+                    garage = data.garage,
+                    vehName = vehicleLabel,
+                    vehicle_name = vehlabel,
+                    impound = data.impound,
+                    shared = data.shared,
+                    deformation = vehDeformation,
+                    depotprice = ImpoundPrice
+                })
+            end,
+        }
     end
 
     if #menuData.options < 1 then
@@ -514,16 +489,16 @@ local function storeVeh ( data )
     -- {"targetped":true,"spawnpoint":[{"x":105.08464050292969,"y":-1076.3994140625,"z":28.91999816894531,"w":340.0},{"x":107.84837341308594,"y":-1077.8819580078126,"z":28.91999816894531,"w":340.0},{"x":111.22987365722656,"y":-1079.630859375,"z":28.91999626159668,"w":340.0},{"x":106.56298828125,"y":-1064.118896484375,"z":28.92056465148925,"w":246.5},{"x":108.02095031738281,"y":-1060.681640625,"z":28.91999816894531,"w":246.5},{"x":109.59732818603516,"y":-1057.3714599609376,"z":28.9200210571289,"w":246.5},{"x":111.0271224975586,"y":-1053.5751953125,"z":28.9282112121582,"w":246.5}],"garage":"Garagem da Praça 1 ","type":["car","motorcycle","cycles"]}
 
     local myCoords = GetEntityCoords(cache.ped)
-    local vehicle = cache.vehicle and cache.vehicle or lib.getClosestVehicle(myCoords)
+    local vehicle = cache.vehicle or lib.getClosestVehicle(myCoords)
 
     local vehicleClass = GetVehicleClass(vehicle)
-    local vehicleType = utils.classCheck(vehicleClass)
+    local vehicleType = utils.getCategoryByClass(vehicleClass)
 
     if not vehicle then return
         utils.notify(locale('notify.error.not_veh_exist'), 'error')
     end
 
-    if not utils.garageType("check", data.type, vehicleType) then return
+    if not lib.table.contains(data.type, vehicleType) then return
         utils.notify(locale('notify.info.invalid_veh_classs', data.garage))
     end
 
