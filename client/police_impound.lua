@@ -25,7 +25,10 @@ local function spawnvehicle ( data )
     vehFunc.svp(vehEntity, vehData.mods)
     Deformation.set(vehEntity, vehData.deformation)
     TriggerServerEvent("rhd_garage:server:removeFromPoliceImpound", vehData.plate)
-    TriggerEvent("vehiclekeys:client:SetOwner", vehData.plate:trim())
+
+    if Config.GiveKeys.tempkeys then
+        TriggerEvent("vehiclekeys:client:SetOwner", vehData.plate:trim())
+    end
 end
 
 ---@param garage table
@@ -73,7 +76,7 @@ local function openpoliceImpound ( garage )
                 onSelect = function ()
                     local coords = vec(GetOffsetFromEntityInWorldCoords(cache.ped, 0.0, 2.0, 0.5), GetEntityHeading(cache.ped)+90)
                     local vehInArea = lib.getClosestVehicle(coords.xyz)
-                    if DoesEntityExist(vehInArea) then return utils.notify(locale('rhd_garage:no_parking_spot'), 'error') end
+                    if DoesEntityExist(vehInArea) then return utils.notify(locale('notify.error.no_parking_spot'), 'error') end
 
                     VehicleShow = utils.createPlyVeh(props.model, coords)
                     NetworkFadeInEntity(VehicleShow, true, false)

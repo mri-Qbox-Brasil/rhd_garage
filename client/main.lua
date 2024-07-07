@@ -66,7 +66,10 @@ local function spawnvehicle ( data )
     Deformation.set(vehEntity, vehData.deformation)
     TriggerServerEvent("rhd_garage:server:updateState", { plate = vehData.plate, state = 0, garage = vehData.garage, })
     Entity(vehEntity).state:set('vehlabel', vehData.vehicle_name)
-    TriggerEvent("vehiclekeys:client:SetOwner", vehData.plate:trim())
+    
+    if Config.GiveKeys.tempkeys then
+        TriggerEvent("vehiclekeys:client:SetOwner", vehData.plate:trim())
+    end
 end
 
 --- Garage Action
@@ -245,7 +248,7 @@ local function actionMenu ( data )
         }
 
         actionData.options[#actionData.options+1] = {
-            title = locale('rhd_garage:givekeys'),
+            title = locale('context.garage.vehicle_keys'),
             icon = 'key',
             iconAnimation = Config.IconAnimation,
             metadata = {
@@ -353,7 +356,7 @@ local function openMenu ( data )
                     end
 
                     local vehInArea = lib.getClosestVehicle(defaultcoords.xyz)
-                    if DoesEntityExist(vehInArea) then return utils.notify(locale('rhd_garage:no_parking_spot'), 'error') end
+                    if DoesEntityExist(vehInArea) then return utils.notify(locale('notify.error.no_parking_spot'), 'error') end
 
                     VehicleShow = utils.createPlyVeh(vehModel, defaultcoords)
                     SetEntityAlpha(VehicleShow, 200, false)

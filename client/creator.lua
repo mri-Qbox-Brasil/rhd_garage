@@ -469,14 +469,14 @@ local function listGarage()
                                 index = k
                             }
                         },
-                        {
-                            title = locale("context.admin.blip_setting"),
-                            icon = "map",
-                            onSelect = setBlip,
-                            args = {
-                                index = k
-                            }
-                        },
+                        -- {
+                        --     title = locale("context.admin.blip_setting"),
+                        --     icon = "map",
+                        --     onSelect = setBlip,
+                        --     args = {
+                        --         index = k
+                        --     }
+                        -- },
                         {
                             title = locale("context.admin.options_changelocation"),
                             icon = "location-dot",

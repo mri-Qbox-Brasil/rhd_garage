@@ -23,6 +23,7 @@ Config.SwapGarage = {
 }
 
 Config.GiveKeys = {
+    tempkeys = false, -- true se você quiser dar chaves temporárias quando spawnar o veículo
     enable = true,
     price = 500
 }
