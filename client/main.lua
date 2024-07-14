@@ -47,14 +47,19 @@ local function spawnvehicle ( data )
     local vehEntity = utils.createPlyVeh(vehData.model, data.coords)
     SetVehicleOnGroundProperly(vehEntity)
     if Config.SpawnInVehicle then TaskWarpPedIntoVehicle(cache.ped, vehEntity, -1) end
-    SetVehicleEngineHealth(vehEntity, vehData.engine + 0.0)
-    SetVehicleBodyHealth(vehEntity, vehData.body + 0.0)
+    local engine = vehData.engine or 1000
+    local body = vehData.body or 1000
+
+    SetVehicleEngineHealth(vehEntity, engine + 0.0)
+    SetVehicleBodyHealth(vehEntity, body + 0.0)
     utils.setFuel(vehEntity, vehData.fuel)
-    vehFunc.svp(vehEntity, vehData.mods)
-    Deformation.set(vehEntity, vehData.deformation)
-    TriggerServerEvent("rhd_garage:server:updateState", { plate = vehData.plate, state = 0, garage = vehData.garage, })
-    Entity(vehEntity).state:set('vehlabel', vehData.vehicle_name)
-    
+    vehFunc.svp(vehEntity, vehData.mods or data.prop)
+    if vehData.deformation or data.deformation then
+        Deformation.set(vehEntity, vehData.deformation or data.deformation)
+    end
+    TriggerServerEvent("rhd_garage:server:updateState", { plate = vehData.plate or data.plate, state = 0, garage = vehData.garage or data.garage, })
+    Entity(vehEntity).state:set('vehlabel', vehData.vehicle_name or data.vehicle_name)
+
     if Config.GiveKeys.tempkeys then
         TriggerEvent("vehiclekeys:client:SetOwner", vehData.plate:trim())
     end
