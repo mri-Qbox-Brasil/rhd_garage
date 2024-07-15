@@ -45,7 +45,7 @@ END IF;
 IF NOT EXISTS( (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE()
         AND COLUMN_NAME='financetime' AND TABLE_NAME='player_vehicles') ) THEN
     ALTER TABLE player_vehicles ADD financetime int(11) NOT NULL DEFAULT 0;
-END IF
+END IF;
 
 CREATE TRIGGER rhd_garage_update_impound_plate
 AFTER UPDATE ON player_vehicles
