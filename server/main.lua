@@ -1,3 +1,30 @@
+local UPDATE_SQL = {
+    ADD_COLUMN_BALANCE = 'ALTER TABLE player_vehicles ADD balance int(11) NOT NULL DEFAULT 0;',
+    ADD_COLUMN_PAYMENTAMOUNT = 'ALTER TABLE player_vehicles ADD paymentamount int(11) NOT NULL DEFAULT 0;',
+    ADD_COLUMN_PAYMENTSLEFT = 'ALTER TABLE player_vehicles ADD paymentsleft int(11) NOT NULL DEFAULT 0;',
+    ADD_COLUMN_FINANCETIME = 'ALTER TABLE player_vehicles ADD financetime int(11) NOT NULL DEFAULT 0;',
+}
+
+AddEventHandler('onResourceStart', function(resource)
+    if resource == GetCurrentResourceName() then
+        local results = {}
+        for k, v in pairs(UPDATE_SQL) do
+            local status, err = pcall(function()
+                MySQL.Sync.execute(v, {})
+            end)
+            if not status and not string.find(string.lower(err), 'duplicate') then
+                results[#results + 1] = {
+                    script = k,
+                    error = err
+                }
+            end
+        end
+        if #results > 0 then
+            print(string.format('Errors: %s', json.encode(results)))
+        end
+    end
+end)
+
 if not lib.checkDependency('ox_lib', '3.23.1') then error('This resource requires ox_lib version 3.23.1') end
 
 --- callback
@@ -36,7 +63,7 @@ lib.callback.register("rhd_garage:cb_server:transferVehicle", function (src, cli
     if fw.rm(src, "cash", clientData.price) then
         return false, locale("notify.error.need_money", lib.math.groupdigits(clientData.price, '.'))
     end
-    
+
     local success = fw.uvo(src, tid, clientData.plate)
     if success then utils.notify(tid, locale("notify.success.transferveh.target", fw.gn(src), clientData.garage), "success") end
     return success, locale("notify.success.transferveh.source", fw.gn(tid))
@@ -57,7 +84,7 @@ RegisterNetEvent("rhd_garage:server:removeTemp", function ( data )
     if tempVehicle[citizenid] == data.model then
         tempVehicle[citizenid] = nil
     end
-    
+
 end)
 
 lib.addCommand('removeTemp', {
