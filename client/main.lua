@@ -53,7 +53,9 @@ local function spawnvehicle ( data )
     SetVehicleEngineHealth(vehEntity, engine + 0.0)
     SetVehicleBodyHealth(vehEntity, body + 0.0)
     utils.setFuel(vehEntity, vehData.fuel)
-    vehFunc.svp(vehEntity, vehData.mods or data.prop)
+    if vehData.mods or data.prop then
+        vehFunc.svp(vehEntity, vehData.mods or data.prop)
+    end
     if vehData.deformation or data.deformation then
         Deformation.set(vehEntity, vehData.deformation or data.deformation)
     end
@@ -62,6 +64,11 @@ local function spawnvehicle ( data )
 
     if Config.GiveKeys.tempkeys then
         TriggerEvent("vehiclekeys:client:SetOwner", vehData.plate:trim())
+    end
+
+    if not data.plate then
+        local plate = GetVehicleNumberPlateText(vehEntity)
+        TriggerEvent("vehiclekeys:client:SetOwner", plate)
     end
 end
 
@@ -123,6 +130,8 @@ local function actionMenu ( data )
                         return
                     end
                     destroyPreview()
+                    print(json.encode(data))
+
                     spawnvehicle( data )
                 end
             },
