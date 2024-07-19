@@ -3,17 +3,17 @@ Config = {}
 GarageZone = lib.loadJson('data.garages') ---@type table<string, GarageData>
 CNV = lib.loadJson('data.vehiclesname') ---@type table<string, CustomName>
 
-Config.Target = 'ox' -- ox / qb
-Config.RadialMenu = 'ox' --- ox / qb / rhd
+Config.Target = 'ox'           -- ox / qb
+Config.RadialMenu = 'ox'       --- ox / qb / rhd
 Config.FuelScript = 'cdn-fuel' --- rhd_fuel / ox_fuel / LegacyFuel / ps-fuel / cdn-fuel
 Config.changeNamePrice = 15000 --- price for changing the name of the vehicle in the garage
-Config.SpawnInVehicle = true --- change this to true if you want the player to immediately enter the vehicle when the vehicle is taken out of the garage
+Config.SpawnInVehicle = false  --- change this to true if you want the player to immediately enter the vehicle when the vehicle is taken out of the garage
 
 --- Additional: (Requires ox_target or qb-target resource)
 Config.UseJobVechileShop = true --- Change this to false if you do not want to use the work vehicle shop system from rhd
-Config.UsePoliceImpound = true --- change it to false if you don't want to use the police impound system from rhd
+Config.UsePoliceImpound = true  --- change it to false if you don't want to use the police impound system from rhd
 
-Config.InDevelopment = true --- Turn this off when you have finished setting up this garage
+Config.InDevelopment = true     --- Turn this off when you have finished setting up this garage
 
 Config.TransferVehicle = {
     enable = true,
@@ -41,16 +41,16 @@ Config.Icons = {
 }
 
 Config.ImpoundPrice = {
-    [0] = 15000, -- Compacts
-    [1] = 15000, -- Sedans
-    [2] = 15000, -- SUVs
-    [3] = 15000, -- Coupes
-    [4] = 15000, -- Muscle
-    [5] = 15000, -- Sports Classics
-    [6] = 15000, -- Sports
-    [7] = 15000, -- Super
-    [8] = 15000, -- Motorcycles
-    [9] = 15000, -- Off-road
+    [0] = 15000,  -- Compacts
+    [1] = 15000,  -- Sedans
+    [2] = 15000,  -- SUVs
+    [3] = 15000,  -- Coupes
+    [4] = 15000,  -- Muscle
+    [5] = 15000,  -- Sports Classics
+    [6] = 15000,  -- Sports
+    [7] = 15000,  -- Super
+    [8] = 15000,  -- Motorcycles
+    [9] = 15000,  -- Off-road
     [10] = 15000, -- Industrial
     [11] = 15000, -- Utility
     [12] = 15000, -- Vans
@@ -59,10 +59,10 @@ Config.ImpoundPrice = {
     [15] = 15000, -- Helicopters
     [16] = 15000, -- Planes
     [17] = 15000, -- Service
-    [18] = 0, -- Emergency
+    [18] = 0,     -- Emergency
     [19] = 15000, -- Military
     [20] = 15000, -- Commercial
-    [21] = 0 -- Trains (lol)
+    [21] = 0      -- Trains (lol)
 }
 
 Config.PoliceImpound = {

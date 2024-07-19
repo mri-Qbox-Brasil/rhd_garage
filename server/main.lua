@@ -20,7 +20,7 @@ AddEventHandler('onResourceStart', function(resource)
             end
         end
         if #results > 0 then
-            print(string.format('Errors: %s', json.encode(results)))
+            print(string.format('^1Errors: %s^0', json.encode(results)))
         end
     end
 end)
