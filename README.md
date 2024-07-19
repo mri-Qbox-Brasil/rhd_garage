@@ -1,5 +1,7 @@
-# RHD-Garage
-The garage system for QBCore and ESX frameworks is created by [dellaaaaaa](https://github.com/dellaaaaaa). We invite you to contribute to this garage script by submitting new features via PR. We're always eager to review and consider new features
+# RHD Garage
+The garage system for QBCore and ESX frameworks is created by [dellaaaaaa](https://github.com/dellaaaaaa). We invite you to contribute to this garage script by submitting new features via PR. We're always eager to review and consider new features.
+
+Don't forget to read the installation [documentation](https://rhd-script.gitbook.io/rhd-scripts/free-scripts/rhd-garage)
 
 # Features
 - Public Garage
@@ -13,6 +15,8 @@ The garage system for QBCore and ESX frameworks is created by [dellaaaaaa](https
 - Save Deformation Damage
 - Garage Creator (In Game) ```/garagelist (Admin Only)```
 - Garage Editor (In Game) ```/garagelist (Admin Only)```
+- Using spawn points ```(option)```
+- Interaction ```(radialmenu, target, key pressed)```
 - Custom Vehicle Name
 - Swap Garage
 - Transfer Vehicle
