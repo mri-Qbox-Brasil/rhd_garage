@@ -84,6 +84,17 @@ local function actionMenu ( data )
         onExit = destroyPreview,
         options = {
             {
+                title = data.vehName,
+                icon = data.icon --[[@as string]],
+                readOnly = true,
+                iconAnimation = Config.IconAnimation,
+                metadata = {
+                    { label = 'Fuel', value = math.floor(data.fuel) .. '%', progress = math.floor(data.fuel), colorScheme = utils.getColorLevel(math.floor(data.fuel))},
+                    { label = 'Body', value = math.floor(data.body / 10) .. '%', progress = math.floor(data.body / 10), colorScheme = utils.getColorLevel(math.floor(data.body / 10))},
+                    { label = 'Engine', value = math.floor(data.engine/ 10) .. '%', progress = math.floor(data.engine / 10), colorScheme = utils.getColorLevel(math.floor(data.engine / 10))}
+                },
+            },
+            {
                 title = data.impound and locale('garage.pay_impound') or locale('garage.take_out_veh'),
                 icon = data.impound and 'hand-holding-dollar' or 'sign-out-alt',
                 iconAnimation = Config.IconAnimation,
@@ -488,7 +499,8 @@ local function openMenu ( data )
                     impound = data.impound,
                     shared = data.shared,
                     deformation = vehDeformation,
-                    depotprice = ImpoundPrice
+                    depotprice = ImpoundPrice,
+                    icon = icon
                 })
             end,
         }

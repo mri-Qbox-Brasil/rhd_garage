@@ -68,12 +68,12 @@ local function createGarage ()
                 local gtype = input[2]
                 local blip = input[3] and blipInput(Impound, label) or nil
                 local shared = input[5]
-                local sp = input[6] and spawnPoint.create(zones, false) or nil
+                local sp = input[6] and spawnPoint.create(zones, false, nil, gtype) or nil ---@type table<string, vector3[]|string[]>
                 local interact = tPed and pedcreator.start(zones) or input[7]
 
                 if tPed and not sp then
                     Wait(1000)
-                    sp = spawnPoint.create(zones, true) or nil
+                    sp = spawnPoint.create(zones, true, nil, gtype) or nil ---@type table<string, vector3[]|string[]>
                 end
 
                 GarageZone[label] = {
@@ -82,29 +82,28 @@ local function createGarage ()
                     zones = zones,
                     impound = Impound,
                     shared = shared,
-                    spawnPoint = sp,
-                    interaction = interact,
-                    vehicles = nil
+                    spawnPoint = sp and sp.c or sp,
+                    spawnPointVehicle = sp and sp.v or sp,
+                    interaction = interact
                 }
                 
+                gzf.save(GarageZone)
                 utils.notify(locale("notify.admin.success_create", label:upper()), "success")
-                gzf.save( GarageZone )
             end
         end
     })
 end
 
 --- Delete garage by index
----@param garage {index: string}
-local function delete(garage)
-    GarageZone[garage.index] = nil
-    utils.notify(locale("notify.admin.success_deleted", garage.index), "success")
-    gzf.save( GarageZone )
+local function delete(self)
+    GarageZone[self.label --[[@as string]]] = nil
+    gzf.save(GarageZone)
+    utils.notify(locale("notify.admin.success_deleted", self.label --[[@as string]]), "success")
 end
 
 --- Set blip garage
----@param garage {index: string}
-local function setBlip(garage)
+local function setBlip(self)
+    local k, v in self ---@type string, GarageData
     local blipContext = {
         id = "blip_setting",
         title = locale("context.admin.blip_setting"),
@@ -117,12 +116,12 @@ local function setBlip(garage)
                 title = locale("context.admin.blip_edit"),
                 icon = "pen-to-square",
                 onSelect = function ()
-                    local gBlip = GarageZone[garage.index].blip
+                    local gBlip = v.blip
 
                     local placeholder = {
                         type = gBlip and gBlip.type or '',
                         color = gBlip and gBlip.color or '',
-                        label = gBlip and gBlip.label or garage.index
+                        label = gBlip and gBlip.label or k
                     }
 
                     local blipinput = lib.inputDialog('BLIP', {
@@ -132,13 +131,13 @@ local function setBlip(garage)
                     })
 
                     if blipinput then
-                        GarageZone[garage.index].blip = {
+                        GarageZone[k].blip = {
                             type = blipinput[1],
                             color = blipinput[2],
                             label = blipinput[3]
                         }
+                        gzf.save(GarageZone)
                         utils.notify(locale("notify.admin.success_editblip"), "success")
-                        gzf.save( GarageZone )
                     end
                 end
             },
@@ -146,9 +145,9 @@ local function setBlip(garage)
                 title = locale("context.admin.blip_remove"),
                 icon = "trash",
                 onSelect = function()
-                    GarageZone[garage.index].blip = nil
+                    GarageZone[k].blip = nil
+                    gzf.save(GarageZone)
                     utils.notify("Blip berhasil di hapus", "success")
-                    gzf.save( GarageZone )
                 end
             }
         }
@@ -157,23 +156,20 @@ local function setBlip(garage)
 end
 
 --- Change garage locations
----@param garage {index: string}
-local function changeLocation(garage)
+local function changeLocation(self)
     zones.startCreator({
         type = "poly",
-        onCreated = function (zones) ---@param zones OxZone
-            GarageZone[garage.index].zones = zones
+        onCreated = function (Zones) ---@param Zones OxZone
+            GarageZone[self.label --[[@as string]]].zones = Zones
+            gzf.save(GarageZone)
             utils.notify(locale("notify.admin.success_changelocation"), "success")
-            gzf.save( GarageZone )
         end
     })
 end
 
 --- Teleport to garage location
----@param garage {index: string, value: GarageData}
-local function teleportToLocation(garage)
-    local data = garage.value
-    local coords = data.zones.points[1]
+local function teleportToLocation(self)
+    local coords = self.coords --[[@as vector3]]
     DoScreenFadeOut(500)
     Wait(1000)
     SetPedCoordsKeepVehicle(cache.ped, coords.x, coords.y, coords.z)
@@ -181,29 +177,37 @@ local function teleportToLocation(garage)
 end
 
 --- Change garage label
----@param garage {index: string, value: GarageData}
-local function changeGarageLabel(garage)
+local function changeGarageLabel(self)
+    local k, v in self ---@type string, GarageData
+    
     local inputLabel = lib.inputDialog(locale("input.admin.header_changelabel"), {
         { type = 'input', label = locale("input.admin.label_changelabel"), placeholder = 'Alta Garage, Pilbox Garage, Etc', required = true, min = 1 },
     })
 
     if inputLabel then
-        GarageZone[inputLabel[1]] = garage.value
-        GarageZone[garage.index] = nil
-        utils.notify(locale("notify.admin.success_changelabel", inputLabel[1]))
-        gzf.save( GarageZone )
+        local newLabel = inputLabel[1]
+        GarageZone[newLabel] = v
+        GarageZone[k] = nil
+        gzf.save(GarageZone)
+        utils.notify(locale("notify.admin.success_changelabel", newLabel))
     end
 end
 
 --- Edit the spawn point
----@param garage {index:string, value:GarageData}
-local function setspawnpoint(garage)
-    local asp = GarageZone[garage.index].spawnPoint or {}
+local function setspawnpoint(self)
+    local k, v in self ---@type string, GarageData
+    local asp = v.spawnPoint or {}
+    local avsp = v.spawnPointVehicle or {}
     local noEmpty = asp and #asp > 0
+
     local context = {
         id = 'rhd:csp',
         title = 'Spawn Point',
-        options = {}
+        options = {},
+        onBack = function ()
+            
+        end,
+        menu = 'rhd:action_garage'
     }
 
     if noEmpty then
@@ -223,63 +227,36 @@ local function setspawnpoint(garage)
         end
     end
 
-    context.options[#context.options + 1] = {
-        title = "Add Point",
-        icon = "plus",
+    context.options[#context.options+1] = {
+        title = "Edit Point",
+        icon = "pen-to-square",
         onSelect = function ()
-            local pr = spawnPoint.create(garage.value.zones, true, asp)
+            local sp = { c = asp, v = avsp }
+            local pr = spawnPoint.create(v.zones, true, sp, v.type) ---@type table<string, vector3[]|string[]>
             if not pr then return end
-            GarageZone[garage.index].spawnPoint = utils.mergeArray(asp, pr)
+            GarageZone[k].spawnPoint = pr.c
+            GarageZone[k].spawnPointVehicle = pr.v
             utils.notify("The spawn point has been successfully set", "success", 8000)
             gzf.save(GarageZone)
         end
     }
-
-    if noEmpty then
-        context.options[#context.options + 1] = {
-            title = "Remove Point",
-            icon = 'minus',
-            onSelect = function()
-                local input = lib.inputDialog('REMOVE POINT', {
-                    { type = 'number', label = 'point index?', placeholder = '', required = true, min = 1, max = #asp },
-                })
-
-                if input then
-                    local point = asp[input[1]]
-                    if point then
-                        table.remove(asp, input[1])
-                        GarageZone[garage.index].spawnPoint = asp
-                        utils.notify("point with ID " .. input[1] .. " was successfully deleted", "success", 8000)
-
-                        if #GarageZone[garage.index].spawnPoint < 1 then
-                            GarageZone[garage.index].spawnPoint = nil
-                        end
-                        
-                        gzf.save(GarageZone)
-                    end
-                end
-            end
-        }
-    end
     utils.createMenu(context)
 end
 
 --- Add & Remove job
----@param garage {index: string, value: GarageData}
-local function jobOptions(garage)
-    local key = garage.index
-    local value = garage.value
+local function jobOptions(self)
+    local k, v in self ---@type string, GarageData
 
     local contextJob = {
         id = "rhd_contextJob",
-        title = key,
+        title = k,
         menu = "rhd:action_garage",
         onBack = function() end,
         options = {}
     }
 
-    if value.job and type(value.job) == "table" then
-        for name, grade in pairs(value.job) do
+    if v.job and type(v.job) == "table" then
+        for name, grade in pairs(v.job) do
             contextJob.options[#contextJob.options+1] = {
                 title = locale("context.admin.job_description", name, grade),
                 icon = "briefcase",
@@ -291,14 +268,14 @@ local function jobOptions(garage)
                             {
                                 title = locale("context.admin.delete"),
                                 icon = "trash",
-                                onSelect = function()
-                                    value.job[name] = nil
+                                onSelect = function ()
+                                    v.job[name] = nil
 
-                                    if not next(value.job) then
-                                        value.job = nil
+                                    if not next(v.job) then
+                                        v.job = nil
                                     end
 
-                                    GarageZone[key].job = value.job
+                                    GarageZone[k].job = v.job
                                     utils.notify(locale("notify.admin.success_deleted_access"), "success")
                                     gzf.save( GarageZone )
                                 end
@@ -321,9 +298,10 @@ local function jobOptions(garage)
             })
 
             if input then
-                if not value.job then value.job = {} end
-                value.job[input[1]] = tonumber(input[2])
-                GarageZone[key].job = value.job
+                local name, rank = input[1], input[2]
+                if not v.job then v.job = {} end
+                v.job[name] = rank
+                GarageZone[k].job = v.job
                 utils.notify(locale("notify.admin.success_added_access", input[1]))
                 gzf.save( GarageZone )
             end
@@ -334,21 +312,19 @@ local function jobOptions(garage)
 end
 
 --- Add & Remove gang
----@param garage {index: string, value: GarageData}
-local function gangOptions(garage)
-    local key = garage.index
-    local value = garage.value
+local function gangOptions(self)
+    local k, v in self ---@type string, GarageData
 
     local contextGang = {
         id = "rhd_contextGang",
-        title = key,
+        title = k,
         menu = "rhd:action_garage",
         onBack = function() end,
         options = {}
     }
 
-    if value.gang and type(value.gang) == "table" then
-        for name, grade in pairs(value.gang) do
+    if v.gang and type(v.gang) == "table" then
+        for name, grade in pairs(v.gang) do
             contextGang.options[#contextGang.options+1] = {
                 title = locale("context.admin.gang_description", name, grade),
                 icon = "users",
@@ -360,14 +336,14 @@ local function gangOptions(garage)
                             {
                                 title = locale("context.admin.delete"),
                                 icon = "trash",
-                                onSelect = function()
-                                    value.gang[name] = nil
+                                onSelect = function ()
+                                    v.gang[name] = nil
 
-                                    if not next(value.gang) then
-                                        value.gang = nil
+                                    if not next(v.gang) then
+                                        v.gang = nil
                                     end
-
-                                    GarageZone[key].gang = value.gang
+                                    
+                                    GarageZone[k].gang = v.gang
                                     utils.notify(locale("notify.admin.success_deleted_access"), "success")
                                     gzf.save( GarageZone )
                                 end
@@ -390,9 +366,9 @@ local function gangOptions(garage)
             })
 
             if input then
-                if not value.gang then value.gang = {} end
-                value.gang[input[1]] = tonumber(input[2])
-                GarageZone[key].gang = value.gang
+                if not v.gang then v.gang = {} end
+                v.gang[input[1]] = tonumber(input[2])
+                GarageZone[k].gang = v.gang
                 utils.notify(locale("notify.admin.success_added_access", input[1]))
                 gzf.save( GarageZone )
             end
@@ -482,7 +458,7 @@ local function listGarage()
                             icon = "trash",
                             onSelect = delete,
                             args = {
-                                index = k
+                                label = k
                             }
                         },
                         {
@@ -490,7 +466,8 @@ local function listGarage()
                             icon = "map",
                             onSelect = setBlip,
                             args = {
-                                index = k
+                                k = k,
+                                v = v
                             }
                         },
                         {
@@ -498,7 +475,7 @@ local function listGarage()
                             icon = "location-dot",
                             onSelect = changeLocation,
                             args = {
-                                index = k
+                                label = k
                             }
                         },
                         {
@@ -506,7 +483,7 @@ local function listGarage()
                             icon = "location-dot",
                             onSelect = teleportToLocation,
                             args = {
-                                value = v
+                                coords = v.zones.points[1]
                             }
                         },
                         {
@@ -514,8 +491,8 @@ local function listGarage()
                             icon = "pen-to-square",
                             onSelect = changeGarageLabel,
                             args = {
-                                index = k,
-                                value = v
+                                k = k,
+                                v = v
                             }
                         },
                         {
@@ -523,8 +500,8 @@ local function listGarage()
                             icon = "location-dot",
                             onSelect = setspawnpoint,
                             args = {
-                                index = k,
-                                value = v
+                                k = k,
+                                v = v
                             }
                         },
                         {
@@ -545,8 +522,8 @@ local function listGarage()
                         icon = "briefcase",
                         onSelect = jobOptions,
                         args = {
-                            index = k,
-                            value = v
+                            k = k,
+                            v = v
                         }
                     }
                 end
@@ -557,8 +534,8 @@ local function listGarage()
                         icon = "users",
                         onSelect = gangOptions,
                         args = {
-                            index = k,
-                            value = v
+                            k = k,
+                            v = v
                         }
                     }
                 end
