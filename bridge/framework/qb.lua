@@ -352,23 +352,43 @@ if isServer then
     function fw.gpvbg(src, garage, filter)
         local Identifier = fw.gi(src)
         if not Identifier then return {} end
-        local format = [[
-            SELECT 
-                vehicle,
-                vehicle_name,
-                mods,
-                state,
-                depotprice,
-                plate,
-                fakeplate,
-                fuel,
-                engine,
-                body,
-                deformation
-            FROM player_vehicles WHERE citizenid = ? AND garage = ? AND state = ?
-        ]]
+        if Config.VehiclesInAllGarages then
+            local format = [[
+                SELECT 
+                    vehicle,
+                    vehicle_name,
+                    mods,
+                    state,
+                    depotprice,
+                    plate,
+                    fakeplate,
+                    fuel,
+                    engine,
+                    body,
+                    deformation
+                FROM player_vehicles WHERE citizenid = ? AND state = ?
+            ]]
 
-        local value = {Identifier, garage, 1}
+            local value = {Identifier, 1}
+        else
+            local format = [[
+                SELECT 
+                    vehicle,
+                    vehicle_name,
+                    mods,
+                    state,
+                    depotprice,
+                    plate,
+                    fakeplate,
+                    fuel,
+                    engine,
+                    body,
+                    deformation
+                FROM player_vehicles WHERE citizenid = ? AND garage = ? AND state = ?
+            ]]
+    
+            local value = {Identifier, garage, 1}
+        end
         if filter then
             if not filter.impound then
                 if filter.shared then
