@@ -352,8 +352,9 @@ if isServer then
     function fw.gpvbg(src, garage, filter)
         local Identifier = fw.gi(src)
         if not Identifier then return {} end
+        local format, value
         if Config.VehiclesInAllGarages then
-            local format = [[
+            format = [[
                 SELECT 
                     vehicle,
                     vehicle_name,
@@ -369,9 +370,9 @@ if isServer then
                 FROM player_vehicles WHERE citizenid = ? AND state = ?
             ]]
 
-            local value = {Identifier, 1}
+            value = {Identifier, 1}
         else
-            local format = [[
+            format = [[
                 SELECT 
                     vehicle,
                     vehicle_name,
@@ -387,7 +388,7 @@ if isServer then
                 FROM player_vehicles WHERE citizenid = ? AND garage = ? AND state = ?
             ]]
     
-            local value = {Identifier, garage, 1}
+            value = {Identifier, garage, 1}
         end
         if filter then
             if not filter.impound then
