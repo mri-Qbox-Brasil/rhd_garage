@@ -26,9 +26,9 @@ local function spawnvehicle ( data )
     Deformation.set(vehEntity, vehData.deformation)
     TriggerServerEvent("rhd_garage:server:removeFromPoliceImpound", vehData.plate)
 
-    if Config.GiveKeys.tempkeys then
-        TriggerEvent("vehiclekeys:client:SetOwner", vehData.plate:trim())
-    end
+    -- if Config.GiveKeys.tempkeys then
+    TriggerEvent("vehiclekeys:client:SetOwner", vehData.plate:trim())
+    -- end
 end
 
 ---@param garage table

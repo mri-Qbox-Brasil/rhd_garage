@@ -89,9 +89,9 @@ local function actionMenu ( data )
                 readOnly = true,
                 iconAnimation = Config.IconAnimation,
                 metadata = {
-                    { label = 'Fuel', value = math.floor(data.fuel) .. '%', progress = math.floor(data.fuel), colorScheme = utils.getColorLevel(math.floor(data.fuel))},
-                    { label = 'Body', value = math.floor(data.body / 10) .. '%', progress = math.floor(data.body / 10), colorScheme = utils.getColorLevel(math.floor(data.body / 10))},
-                    { label = 'Engine', value = math.floor(data.engine/ 10) .. '%', progress = math.floor(data.engine / 10), colorScheme = utils.getColorLevel(math.floor(data.engine / 10))}
+                    { label = '⛽ Combustível', value = math.floor(fuel) .. '%', progress = math.floor(fuel), colorScheme = utils.getColorLevel(math.floor(fuel))},
+                    { label = '🧰 Lataria', value = math.floor(body / 10) .. '%', progress = math.floor(body / 10), colorScheme = utils.getColorLevel(math.floor(body / 10))},
+                    { label = '🔧 Motor', value = math.floor(engine/ 10) .. '%', progress = math.floor(engine / 10), colorScheme = utils.getColorLevel(math.floor(engine / 10))}
                 },
             },
             {
@@ -343,7 +343,7 @@ local function openMenu ( data )
     }
 
     -- print(json.encode(data))
-    local vehicles = exports.qbx_core:GetVehiclesByHash()
+    -- local vehicles = exports.qbx_core:GetVehiclesByHash()
 
 
     if data.vehicles then

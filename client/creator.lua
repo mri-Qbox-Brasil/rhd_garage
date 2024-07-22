@@ -61,7 +61,7 @@ local function createGarage ()
                 }, required = true},
             })
             if input then
-                print(input[7])
+                -- print(input[7])
                 local tPed = input[7] == 'targetped'
                 local Impound = not input[5] and input[4] or false
                 local label = input[1]
