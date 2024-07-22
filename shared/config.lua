@@ -8,7 +8,7 @@ Config.RadialMenu = 'ox'       --- ox / qb / rhd
 Config.FuelScript = 'cdn-fuel' --- rhd_fuel / ox_fuel / LegacyFuel / ps-fuel / cdn-fuel
 Config.changeNamePrice = 15000 --- price for changing the name of the vehicle in the garage
 Config.SpawnInVehicle = false  --- change this to true if you want the player to immediately enter the vehicle when the vehicle is taken out of the garage
-Config.VehiclesInAllGarages = false --- deixe true para todos os veículos do player aparecerem em todas as garagens
+Config.VehiclesInAllGarages = false --- Opção ZAP: deixe true para todos os veículos do player aparecerem em todas as garagens
 
 --- Additional: (Requires ox_target or qb-target resource)
 Config.UseJobVechileShop = false --- Change this to false if you do not want to use the work vehicle shop system from rhd

@@ -71,7 +71,16 @@ local function spawnvehicle ( data )
         TriggerEvent("vehiclekeys:client:SetOwner", plate)
     end
 end
-
+local function getVehMetadata(data)
+    local fuel = data.fuel
+    local body = data.body
+    local engine = data.engine
+    return  {
+        { label = '⛽ Combustível', value = math.floor(fuel) .. '%', progress = math.floor(fuel), colorScheme = utils.getColorLevel(math.floor(fuel))},
+        { label = '🧰 Lataria', value = math.floor(body / 10) .. '%', progress = math.floor(body / 10), colorScheme = utils.getColorLevel(math.floor(body / 10))},
+        { label = '🔧 Motor', value = math.floor(engine/ 10) .. '%', progress = math.floor(engine / 10), colorScheme = utils.getColorLevel(math.floor(engine / 10))}
+    }
+end
 --- Garage Action
 ---@param data GarageVehicleData
 local function actionMenu ( data )
@@ -88,11 +97,7 @@ local function actionMenu ( data )
                 icon = data.icon --[[@as string]],
                 readOnly = true,
                 iconAnimation = Config.IconAnimation,
-                metadata = {
-                    { label = '⛽ Combustível', value = math.floor(fuel) .. '%', progress = math.floor(fuel), colorScheme = utils.getColorLevel(math.floor(fuel))},
-                    { label = '🧰 Lataria', value = math.floor(body / 10) .. '%', progress = math.floor(body / 10), colorScheme = utils.getColorLevel(math.floor(body / 10))},
-                    { label = '🔧 Motor', value = math.floor(engine/ 10) .. '%', progress = math.floor(engine / 10), colorScheme = utils.getColorLevel(math.floor(engine / 10))}
-                },
+                metadata = getVehMetadata(data),
             },
             {
                 title = data.impound and locale('garage.pay_impound') or locale('garage.take_out_veh'),
@@ -457,11 +462,7 @@ local function openMenu ( data )
             disabled = disabled,
             description = description:upper(),
             iconAnimation = Config.IconAnimation,
-            metadata = {
-                { label = '⛽ Combustível', value = math.floor(fuel) .. '%', progress = math.floor(fuel), colorScheme = utils.getColorLevel(math.floor(fuel))},
-                { label = '🧰 Lataria', value = math.floor(body / 10) .. '%', progress = math.floor(body / 10), colorScheme = utils.getColorLevel(math.floor(body / 10))},
-                { label = '🔧 Motor', value = math.floor(engine/ 10) .. '%', progress = math.floor(engine / 10), colorScheme = utils.getColorLevel(math.floor(engine / 10))}
-            },
+            metadata = getVehMetadata(vd),
             onSelect = function ()
                 local defaultcoords = vec(GetOffsetFromEntityInWorldCoords(cache.ped, 0.0, 2.0, 0.5), GetEntityHeading(cache.ped)+90)
 
