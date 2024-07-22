@@ -11,7 +11,7 @@ Config.SpawnInVehicle = false  --- change this to true if you want the player to
 Config.VehiclesInAllGarages = false --- deixe true para todos os veículos do player aparecerem em todas as garagens
 
 --- Additional: (Requires ox_target or qb-target resource)
-Config.UseJobVechileShop = true --- Change this to false if you do not want to use the work vehicle shop system from rhd
+Config.UseJobVechileShop = false --- Change this to false if you do not want to use the work vehicle shop system from rhd
 Config.UsePoliceImpound = true  --- change it to false if you don't want to use the police impound system from rhd
 
 Config.InDevelopment = true     --- Turn this off when you have finished setting up this garage

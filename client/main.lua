@@ -141,7 +141,7 @@ local function actionMenu ( data )
                         return
                     end
                     destroyPreview()
-                    print(json.encode(data))
+                    -- print(json.encode(data))
 
                     spawnvehicle( data )
                 end
@@ -554,7 +554,7 @@ local function storeVeh ( data )
         vehicle_name = Entity(vehicle).state.vehlabel
     })
 
-    if not isOwned then return
+    if not isOwned and not data.vehicles then return
         utils.notify(locale('notify.error.not_owned'), 'error')
     end
     if cache.vehicle and cache.seat == -1 then
