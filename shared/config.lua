@@ -111,7 +111,8 @@ Config.JobVehicleShop = {
                 forRank = {
                     [0] = true,
                     [1] = true,
-                    [2] = true
+                    [2] = true,
+                    [3] = true,
                 }
             },
             police2 = {
@@ -121,7 +122,7 @@ Config.JobVehicleShop = {
                 forRank = {
                     [0] = true,
                     [1] = true,
-                    [2] = true
+                    [2] = true,
                 }
             }
         },
