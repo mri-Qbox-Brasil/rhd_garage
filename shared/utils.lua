@@ -133,14 +133,17 @@ end
 ---@param vehicle integer
 function utils.createPreviewCam(vehicle)
     if not DoesEntityExist(vehicle) then return end
-    local cam = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
-    RenderScriptCams(true, true, 1500,  true,  true)
-    local vehpos = GetEntityCoords(vehicle)
-    local pos = GetOffsetFromEntityInWorldCoords(vehicle, 0.0, 15.0, 1.0)
-    local camF = GetGameplayCamFov()
-    SetCamCoord(cam, pos.x, pos.y, pos.z + 4.2)
-    PointCamAtCoord(cam, vehpos.x,vehpos.y,vehpos.z + 0.2)
-    SetCamFov(cam, camF - 20)
+
+    if not Config.DisableVehicleCamera then
+        local cam = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
+        RenderScriptCams(true, true, 1500,  true,  true)
+        local vehpos = GetEntityCoords(vehicle)
+        local pos = GetOffsetFromEntityInWorldCoords(vehicle, 0.0, 15.0, 1.0)
+        local camF = GetGameplayCamFov()
+        SetCamCoord(cam, pos.x, pos.y, pos.z + 4.2)
+        PointCamAtCoord(cam, vehpos.x,vehpos.y,vehpos.z + 0.2)
+        SetCamFov(cam, camF - 20)
+    end
 end
 
 --- destroying the camera to review the vehicle
