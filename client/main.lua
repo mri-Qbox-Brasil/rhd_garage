@@ -10,14 +10,18 @@ local function destroyPreview()
 end
 
 local function swapEnabled(from)
-    local fromJob = GarageZone[from]['job']
-    local fromGang = GarageZone[from]['gang']
+    if GarageZone[from] then
+        local fromJob = GarageZone[from]['job']
+        local fromGang = GarageZone[from]['gang']
 
-    if GarageZone[from]['vehicles'] and #GarageZone[from]['vehicles'] > 0 then
+        if GarageZone[from]['vehicles'] and #GarageZone[from]['vehicles'] > 0 then
+            return false
+        end
+        return not (fromJob or fromGang)
+    else
         return false
     end
 
-    return not (fromJob or fromGang)
 end
 
 local function canSwapVehicle(to)
@@ -304,6 +308,17 @@ end
 local function getAvailableSP(point, targetPed)
     local results = nil
     local offset = GetOffsetFromEntityInWorldCoords(cache.ped, 0.0, 2.0, 0.5)
+
+    if type(point) == "vector4" then
+        -- local house = point.xyz
+        if point then
+            local nextGarage = lib.getClosestVehicle(vector3(tonumber(point.x), tonumber(point.y), tonumber(point.z)), 3.0, true)
+            if not nextGarage then
+                results = point
+                return results
+            end
+        end
+    end
 
     if type(point) ~= "table" then
         return
