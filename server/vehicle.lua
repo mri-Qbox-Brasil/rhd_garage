@@ -10,7 +10,7 @@ function vehFuncS.govbp(plate)
     for i=1, #veh do
         local entity = veh[i]
         local Plate = utils.getPlate(entity)
-        if Plate == plate:trim() then
+        if Plate == utils.string.trim(plate) then
             return {
                 exist = DoesEntityExist(entity),
                 coords = GetEntityCoords(entity)

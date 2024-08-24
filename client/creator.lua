@@ -23,7 +23,7 @@ local function blipInput(impound, gLabel)
             return
         end
 
-        if hi[3]:isEmpty() then
+        if utils.string.isEmpty(hi[3]) then
             goto tryAgain
         end
 
@@ -489,18 +489,18 @@ local function listGarage ()
 end
 
 CreateThread(function ()
-    while not fw.playerLoaded do
-        lib.print.warn("Wait for the garage data to finish loading")
-        if Config.InDevelopment then
-            lib.print.info('Use the /loaded and /reloadcache commands to load garage and player data')
-        end
-        Wait(1000)
-    end
+    -- while not fw.playerLoaded do
+    --     lib.print.warn("Wait for the garage data to finish loading")
+    --     if Config.InDevelopment then
+    --         lib.print.info('Use the /loaded and /reloadcache commands to load garage and player data')
+    --     end
+    --     Wait(1000)
+    -- end
     
-    if fw.playerLoaded then
+    -- if fw.playerLoaded then
         gzf.refresh()
         lib.print.info("Garage data has been successfully loaded")
-    end
+    -- end
 end)
 
 RegisterNetEvent('rhd_garage:client:syncConfig', function(newconfig)

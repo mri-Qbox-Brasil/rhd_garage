@@ -472,18 +472,18 @@ if isServer then
         if results and results[1] then
             for i=1, #results do
                 local v = results[i]
-                local plate = v.plate
+                local plate = utils.string.trim(v.plate)
                 local vd = QBCore.Shared.Vehicles[v.vehicle]
                 local brand = vd?.brand
                 local name = vd?.name
                 local defaultname = brand and ("%s %s"):format(brand, name)
-                local customName = CNV[v.plate:trim()] and CNV[v.plate:trim()].name
+                local customName = CNV[plate] and CNV[plate].name
                 local vehname = customName or defaultname
 
                 local stateText = locale('status.in')
 
                 if v.state == 0 then
-                    stateText = vehFuncS.govbp(plate:trim()) and locale('status.out') or locale('status.insurance')
+                    stateText = vehFuncS.govbp(plate) and locale('status.out') or locale('status.insurance')
                 elseif v.state == 2 then
                     stateText = locale('status.confiscated')
                 end
@@ -498,7 +498,7 @@ if isServer then
                     fullname = vehname,
                     brand = brand or '',
                     model = name or '',
-                    plate = v.plate,
+                    plate = plate,
                     garage = v.garage,
                     state = stateText,
                     fuel = v.fuel,
