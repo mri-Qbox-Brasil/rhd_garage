@@ -38,7 +38,8 @@ function gzf.refresh ()
             impound = v.impound,
             shared = v.shared,
             type = v.type,
-            spawnpoint = v.spawnPoint
+            spawnpoint = v.spawnPoint,
+            ignoreDist = true
         }
 
         if type(v.interaction) == "table" then
@@ -65,7 +66,7 @@ function gzf.refresh ()
                         label = "Open Garage",
                         icon = "fas fa-warehouse",
                         action = function ()
-                            args.targetped = true
+                            args.ignoreDist = true
                             exports.rhd_garage:openMenu(args)
                         end,
                         distance = 1.5
