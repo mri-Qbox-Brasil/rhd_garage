@@ -24,7 +24,7 @@ local function spawnvehicle ( data )
     Deformation.set(vehEntity, vehData.deformation)
     TriggerServerEvent("rhd_garage:server:updateState", { plate = vehData.plate, state = 0, garage = vehData.garage, })
     Entity(vehEntity).state:set('vehlabel', vehData.vehicle_name)
-    TriggerEvent("vehiclekeys:client:SetOwner", vehData.plate:trim())
+    TriggerEvent("vehiclekeys:client:SetOwner", utils.string.trim(vehData.plate))
 end
 
 --- Garage Action
@@ -217,40 +217,32 @@ end
 
 --- Get available spawn point
 ---@param point table
----@param targetPed boolean
+---@param ignoreDist boolean
 ---@return vector4?
-local function getAvailableSP(point, targetPed)
-    local results = nil
-    local offset = GetOffsetFromEntityInWorldCoords(cache.ped, 0.0, 2.0, 0.5)
+local function getAvailableSP(point, ignoreDist, default)
 
-    if type(point) ~= "table" then
-        return
-    end
+    assert(
+        type(point) == "table" and point[1], 'Invalid "point" parameter: Expected a non-empty array table.'
+    )
 
-    if #point < 1 then
-        return
-    end
-    
-    for i=1, #point do
-        local c = point[i]
-        local sp = vec(c.x, c.y, c.z)
-        local dist = #(offset - sp)
-        local closestveh = lib.getClosestVehicle(sp, 3.0, true)
-        if not targetPed then
-            if not closestveh and dist < 3.5 then
-                results = vec(c.x, c.y, c.z, c.w)
-                break
-            end
-        else
-            if not closestveh then
-                results = vec(c.x, c.y, c.z, c.w)
-                break
-            end
-            
+    local coords = default
+
+    local result
+    lib.array.forEach(point, function (c)
+        local sp = vec(c.x, c.y, c.z, c.w)
+        local vehEntity = lib.getClosestVehicle(sp.xyz, 3.0, true)
+
+        if ignoreDist and not vehEntity then
+            result = sp
         end
-    end
 
-    return results
+        local dist = #(coords.xyz - sp.xyz)
+        if not ignoreDist and dist < 2.5 and not vehEntity then
+            result = sp
+        end
+    end)
+
+    return result
 end
 
 --- Open Garage
@@ -258,7 +250,7 @@ end
 local function openMenu ( data )
     if not data then return end
     data.type = data.type or "car"
-    
+
     local menuData = {
         id = 'garage_menu',
         title = data.garage:upper(),
@@ -275,25 +267,25 @@ local function openMenu ( data )
         local vd = vehData[i]
         local vehProp = vd.vehicle
         local vehModel = vd.model
-        local plate = vd.plate
+        local plate = utils.string.trim(vd.plate)
         local vehDeformation = vd.deformation
         local gState = vd.state
         local pName = vd.owner or "Unkown Players"
-        local fakeplate = vd.fakeplate
+        local fakeplate = vd.fakeplate and utils.string.trim(vd.fakeplate)
         local engine = vd.engine
         local body = vd.body
         local fuel = vd.fuel
         local dp = vd.depotprice
 
         local vehName = vd.vehicle_name or fw.gvn( vehModel )
-        local customvehName = CNV[plate:trim()] and CNV[plate:trim()].name
+        local customvehName = CNV[plate] and CNV[plate].name
         local vehlabel = customvehName or vehName
 
         local shared_garage = data.shared
         local disabled = false
         local description = ''
 
-        plate = fakeplate and fakeplate:trim() or plate:trim()
+        plate = fakeplate or plate
 
         local vehicleClass = GetVehicleClassFromName(vehModel)
         local icon = Config.Icons[vehicleClass] or 'car'
@@ -326,10 +318,12 @@ local function openMenu ( data )
                 { label = 'Engine', value = math.floor(engine/ 10) .. '%', progress = math.floor(engine / 10), colorScheme = utils.getColorLevel(math.floor(engine / 10))}
             },
             onSelect = function ()
-                local defaultcoords = vec(GetOffsetFromEntityInWorldCoords(cache.ped, 0.0, 2.0, 0.5), GetEntityHeading(cache.ped)+90)
+                local pedHeading = GetEntityHeading(cache.ped)
+                local worlcoords = GetOffsetFromEntityInWorldCoords(cache.ped, 0.0, 2.0, 0.5)
+                local defaultcoords = vec(worlcoords, pedHeading+90)
 
                 if data.spawnpoint then
-                    defaultcoords = getAvailableSP(data.spawnpoint, data.targetped) --[[@as vector4]]
+                    defaultcoords = getAvailableSP(data.spawnpoint, data.ignoreDist, defaultcoords) --[[@as vector4]]
                 end
 
                 if not defaultcoords then
@@ -397,7 +391,7 @@ local function storeVeh ( data )
     end
 
     local prop = vehFunc.gvp(vehicle)
-    local plate = prop.plate:trim()
+    local plate = utils.string.trim(prop.plate)
     local shared = data.shared
     local deformation = Deformation.get(vehicle)
     local fuel = utils.getFuel(vehicle)
