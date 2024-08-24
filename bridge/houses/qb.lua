@@ -27,10 +27,12 @@ if qbHousing or psHousing then
                 inside = function ()
                     if IsControlJustPressed(0, 38) and isOwner then
     
+                        ---@class GarageVehicleData
                         local args = {
                             garage = label,
                             type = {'car', 'motorcycle', 'cycles'},
-                            spawnpoint = spawnloc
+                            spawnpoint = spawnloc,
+                            ignoreDist = true
                         }
     
                         if cache.vehicle then
