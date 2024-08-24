@@ -31,6 +31,4 @@ The RHD team welcomes contributions from the community! If you have suggestions,
 # Dependencies 
 - **[ox_lib](https://github.com/overextended/ox_lib/releases)**
 
-- **[es_extended](https://github.com/esx-framework/esx_core/tree/main/%5Bcore%5D/es_extended) or [qb-core](https://github.com/qbcore-framework/qb-core)**
-
 - **[fivem-freecam](https://github.com/Deltanic/fivem-freecam)**
