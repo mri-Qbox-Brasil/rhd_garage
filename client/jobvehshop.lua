@@ -19,6 +19,14 @@ local function getRankVehicles(vehicle)
     return results
 end
 
+local function destroyPreviewVehicle()
+    if DoesEntityExist(vehPreview) then
+        utils.destroyPreviewCam(vehPreview)
+        SetEntityAsMissionEntity(vehPreview, true, true)
+        DeleteEntity(vehPreview)
+    end
+end
+
 local function previwVehicle(veh, coords, label)
     local model = veh.model
     local price = veh.price
@@ -32,22 +40,15 @@ local function previwVehicle(veh, coords, label)
     lib.registerContext({
         id = 'rhd_garage:jobvehshopAction',
         title = label,
-        onBack = function ()
-            if DoesEntityExist(vehPreview) then
-                utils.destroyPreviewCam(vehPreview)
-                SetEntityAsMissionEntity(vehPreview, true, true)
-                DeleteEntity(vehPreview)
-            end
-        end,
+        onBack = destroyPreviewVehicle,
+        onExit = destroyPreviewVehicle,
         menu = 'rhd_garage:jobvehshopMenu',
         options = {
             {
                 title = vehLabel,
                 description = locale('context.vehicleshop.menu_description_buy'),
                 onSelect = function(args)
-                    utils.destroyPreviewCam(vehPreview)
-                    DeleteEntity(vehPreview)
-                    
+                    destroyPreviewVehicle()
                     Wait(100)
                     local newVeh = utils.createPlyVeh(model, coords)
                     TaskWarpPedIntoVehicle(cache.ped, newVeh, -1)
@@ -110,6 +111,7 @@ CreateThread(function ()
         local data = vehShopConfig[i]
         local pedModel = joaat(data.ped.model)
         local pedCoords = data.ped.coords
+        local groups = data.job
 
         ped[i] = utils.createTargetPed(pedModel, pedCoords, {
             {
@@ -118,7 +120,7 @@ CreateThread(function ()
                 action = function ()
                     showMenu(data)
                 end,
-                groups = 'police',
+                groups = groups,
                 distance = 1.5
             }
         })
