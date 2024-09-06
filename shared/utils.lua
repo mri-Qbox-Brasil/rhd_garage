@@ -1,55 +1,5 @@
----@class OxZone
----@field points vector3[]
----@field thickness number
-
----@class BlipData
----@field type integer
----@field color integer
----@field label string
-
----@class GarageData
----@field type? string[]
----@field blip? BlipData
----@field impound? boolean
----@field shared? boolean
----@field interaction? string|{coords: vector4, model:string|integer}
----@field job? table<string, number>
----@field gang? table<string, number>
----@field spawnPoint? vector4[]
----@field spawnPointVehicle? string[]
----@field zones? OxZone
-
----@class CustomName
----@field name? string
-
----@class RadialData
----@field id string
----@field label string
----@field icon string
----@field event? string
----@field args {garage: string, type: string[], impound: boolean, shared: boolean, spawnpoint: vector3[]}
-
----@class GarageVehicleData
----@field garage? string Garage Name
----@field type? string[] Garage Class
----@field impound? boolean Impound Garage|Insurance
----@field shared? boolean Shared Garage
----@field spawnpoint? vector3[] Garage Spawn Point
----@field targetped? boolean Garage Using Ped
----@field depotprice? number Depot Price
----@field props? table Vehicle Properties
----@field deformation? table Vehicle Deformation
----@field body? number Vehicle BodyHealth
----@field engine? number Vehicle EngineHealth
----@field fuel? number Vehicle Fuel Level
----@field plate? string Vehicle Plate
----@field vehName? string Vehicle Name 1
----@field vehicle_name? string Vehicle Name 2
----@field model? string|integer Vehicle Model
----@field coords? vector3|vector4 Vehicle Spawn Coords
-
-
 utils = {}
+utils.string = {}
 
 local server = IsDuplicityVersion()
 
@@ -61,25 +11,16 @@ local RotationToDirection = function(rot)
     return vector3(-math.sin(rotZ) * cosOfRotX, math.cos(rotZ) * cosOfRotX, math.sin(rotX))
 end
 
----@param string string
----@return string?
-string.trim = function ( string )
-    if not string then return nil end
-    return (string.gsub(string, '^%s*(.-)%s*$', '%1'))
+function utils.string.trim(s)
+    if not s or type(s) ~= 'string' then return end
+    local trimmed = s:gsub('^%s*(.-)%s*$', '%1')
+    return trimmed
 end
 
----@param string string
----@return string?
-string.isEmpty = function (string)
-    return string:match("^%s*$")
+function utils.string.isEmpty(s)
+    return s:match("^%s*$")
 end
 
---- Raycast Camera
----@param distance number
----@return boolean|integer
----@return vector3
----@return boolean
----@return vector3
 function utils.raycastCam(distance)
     local camRot = GetGameplayCamRot()
     local camPos = GetGameplayCamCoord()
@@ -92,10 +33,6 @@ function utils.raycastCam(distance)
     return hit, endPos, inwater, watercoords
 end
 
---- Send Notification
----@param msg string
----@param type? string
----@param duration? number
 function utils.notify(msg, type, duration)
     lib.notify({
         description = msg,
@@ -104,10 +41,6 @@ function utils.notify(msg, type, duration)
     })
 end
 
---- Show & Hide drawtext
----@param type string
----@param text? string
----@param icon? string
 function utils.drawtext (type, text, icon)
     if type == 'show' then
         lib.showTextUI(text,{
@@ -122,15 +55,11 @@ function utils.drawtext (type, text, icon)
     end
 end
 
---- Create context menu
----@param data {id: string, title: string, options: table[]}
 function utils.createMenu( data )
     lib.registerContext(data)
     lib.showContext(data.id)
 end
 
---- Create a camera for vehicle review
----@param vehicle integer
 function utils.createPreviewCam(vehicle)
     if not DoesEntityExist(vehicle) then return end
 
@@ -146,8 +75,6 @@ function utils.createPreviewCam(vehicle)
     end
 end
 
---- destroying the camera to review the vehicle
----@param vehicle integer
 function utils.destroyPreviewCam(vehicle, enterVehicle)
     if not DoesEntityExist(vehicle) then return end
     local cam = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
@@ -166,10 +93,6 @@ function utils.destroyPreviewCam(vehicle, enterVehicle)
     end
 end
 
---- Create target ped
----@param model string | integer
----@param coords vector4
----@param options {label: string, icon: string, distance: number, job:string|table, gang:string|table, action: fun(data:table|integer)}
 function utils.createTargetPed(model, coords, options)
     local newoptions = {}
     local qbtd = nil --- qb-target distance options
@@ -217,9 +140,6 @@ function utils.createTargetPed(model, coords, options)
     return ped
 end
 
---- Remove target ped
----@param entity integer
----@param label string
 function utils.removeTargetPed(entity, label)
     if DoesEntityExist(entity) then
         if Config.Target == "ox" then
@@ -232,25 +152,17 @@ function utils.removeTargetPed(entity, label)
     end
 end
 
---- Get progress color by level (for fuel, engine, body)
----@param level any
----@return string|false?
 function utils.getColorLevel(level)
     if not level then return end
     return level < 25 and "red" or level >= 25 and level < 50 and  "#E86405" or level >= 50 and level < 75 and "#E8AC05" or level >= 75 and "green"
 end
 
---- Get vehicle number plate
----@param vehicle integer
----@return string?
 function utils.getPlate ( vehicle )
     if not DoesEntityExist(vehicle) then return end
-    return GetVehicleNumberPlateText(vehicle):trim()
+    local vehPlate = GetVehicleNumberPlateText(vehicle)
+    return utils.string.trim(vehPlate)
 end
 
---- Checking vehicle class
----@param vehType number
----@return string
 function utils.getCategoryByClass ( vehType )
     local class = {
         [8] = "motorcycle",
@@ -263,9 +175,6 @@ function utils.getCategoryByClass ( vehType )
 end
 
 
---- Set vehicle fuel level
----@param vehicle integer
----@param fuel number
 function utils.setFuel(vehicle, fuel)
     Wait(100)
     if Config.FuelScript == "ox_fuel" then
@@ -275,9 +184,6 @@ function utils.setFuel(vehicle, fuel)
     end
 end
 
---- Get vehicle fuel level
----@param vehicle integer
----@return number
 function utils.getFuel(vehicle)
     local fuelLevel = 0
     if Config.FuelScript == "ox_fuel" then
@@ -288,12 +194,6 @@ function utils.getFuel(vehicle)
     return fuelLevel
 end
 
---- Create vehicle by client side
----@param model string | integer
----@param coords vector4
----@param cb? fun(veh: integer)
----@param network? boolean
----@return integer?
 function utils.createPlyVeh ( model, coords, cb, network )
     print(model)
     network = network == nil and true or network
@@ -311,9 +211,6 @@ function utils.createPlyVeh ( model, coords, cb, network )
     if cb then cb(veh) else return veh end
 end
 
---- Checking or Get garage type
----@param data table[]
----@return string
 function utils.garageType ( data )
     local result = ""
     for i=1, #data do
@@ -323,9 +220,6 @@ function utils.garageType ( data )
     return result
 end
 
---- Checking player gang
----@param data table
----@return boolean
 function utils.GangCheck ( data )
     local configGang = data.gang
     local playergang = fw.player.gang
@@ -341,13 +235,11 @@ function utils.GangCheck ( data )
     return allowed
 end
 
---- Checking player job
----@param data table
----@return boolean
 function utils.JobCheck ( data )
     local configJob = data.job
     local playerjob = fw.player.job
     local allowed = false
+
     if type(configJob) == 'table' then
         local grade = configJob[playerjob.name]
         allowed = grade and playerjob.grade >= grade
@@ -359,55 +251,7 @@ function utils.JobCheck ( data )
     return allowed
 end
 
---- Refresh table after removed
----@param t table array | hash
----@return table?
-function utils.refreshTable(t)
-    local results = {}
-    
-    if type(t) ~= "table" then
-        return
-    elseif table.type(t) == "hash" then
-        for key, val  in pairs(t) do
-            results[key] = val
-        end
-    elseif table.type(t) == "array" then
-        for i=1, #t do
-            results[#results+1] = t[i]
-        end
-    end
-
-    return results
-end
-
---- Merge array tables
----@param o table[]
----@param n table[]
----@return table[]
-function utils.mergeArray(o, n)
-    local results = {}
-
-    if #o > 0 then
-        for i=1, #o do
-            results[#results+1] = o[i]
-        end
-    end
-
-    if #n > 0 then
-        for i=1, #n do
-            results[#results+1] = n[i]
-        end
-    end
-
-    return results
-end
-
 if server then
-    --- Send Notification
-    ---@param src number
-    ---@param msg string
-    ---@param type? string
-    ---@param duration? string
     function utils.notify(src, msg, type, duration)
         lib.notify(src, {
             description = msg,

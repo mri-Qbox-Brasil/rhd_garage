@@ -25,10 +25,7 @@ local function spawnvehicle ( data )
     vehFunc.svp(vehEntity, vehData.mods)
     Deformation.set(vehEntity, vehData.deformation)
     TriggerServerEvent("rhd_garage:server:removeFromPoliceImpound", vehData.plate)
-
-    -- if Config.GiveKeys.tempkeys then
-    TriggerEvent("vehiclekeys:client:SetOwner", vehData.plate:trim())
-    -- end
+    TriggerEvent("vehiclekeys:client:SetOwner", utils.string.trim(vehData.plate))
 end
 
 ---@param garage table
@@ -194,8 +191,8 @@ end
 
 local function impoundVehicle (vehicle)
     local vehprop = vehFunc.gvp(vehicle)
-    local plate = vehprop.plate
-    local vehdata = vehFunc.gvibp(plate:trim())
+    local plate = utils.string.trim(vehprop.plate)
+    local vehdata = vehFunc.gvibp(plate)
     local garageList = checkAvailableGarage()
 
     if not vehdata then return
@@ -207,7 +204,7 @@ local function impoundVehicle (vehicle)
     end
 
     local vehName = vehdata.vehicle_name or fw.gvn(vehdata.vehicle)
-    local customvehName = CNV[plate:trim()] and CNV[plate:trim()].name
+    local customvehName = CNV[plate] and CNV[plate].name
     local vehlabel = customvehName or vehName
 
     local owner = vehdata.owner
@@ -230,7 +227,7 @@ local function impoundVehicle (vehicle)
             fine = input[2],
             garage = input[3],
             prop = vehprop,
-            plate = plate:trim(),
+            plate = plate,
             vehicle = vehlabel,
             date =  math.floor(input[4] / 1000),
             deformation = Deformation.get(vehicle)

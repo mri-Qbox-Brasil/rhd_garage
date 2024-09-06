@@ -463,15 +463,15 @@ if isServer then
         if results and results[1] then
             for i=1, #results do
                 local v = results[i]
-                local plate = v.plate
+                local plate = utils.string.trim(v.plate)
                 local defaultname = v.vehicle_name or "Unkown Vehicles"
-                local customName = CNV[v.plate:trim()] and CNV[v.plate:trim()].name
+                local customName = CNV[plate] and CNV[plate].name
                 local vehname = customName or defaultname
 
                 local stateText = locale('status.in')
 
                 if v.stored == 0 then
-                    stateText = vehFuncS.govbp(plate:trim()) and locale('status.out') or locale('status.insurance')
+                    stateText = vehFuncS.govbp(plate) and locale('status.out') or locale('status.insurance')
                 elseif v.stored == 2 then
                     stateText = locale('status.confiscated')
                 end
@@ -486,7 +486,7 @@ if isServer then
                     fullname = vehname,
                     brand = '',
                     model = '',
-                    plate = v.plate,
+                    plate = plate,
                     garage = v.garage,
                     state = stateText,
                     fuel = v.fuel,

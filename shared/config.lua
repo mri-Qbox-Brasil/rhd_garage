@@ -1,5 +1,6 @@
 Config = {}
 
+-- Load garage and vehicle data from JSON files
 GarageZone = lib.loadJson('data.garages') ---@type table<string, GarageData>
 CNV = lib.loadJson('data.vehiclesname') ---@type table<string, CustomName>
 
@@ -17,14 +18,16 @@ Config.UsePoliceImpound = true  --- change it to false if you don't want to use 
 
 Config.InDevelopment = true     --- Turn this off when you have finished setting up this garage
 
+-- Vehicle transfer settings
 Config.TransferVehicle = {
-    enable = true,
-    price = 100
+    enable = true,  --- Enable or disable vehicle transfer functionality
+    price = 100     --- Price for transferring a vehicle
 }
 
+-- Garage swap settings
 Config.SwapGarage = {
-    enable = true,
-    price = 500
+    enable = true,  --- Enable or disable garage swapping functionality
+    price = 500     --- Price for swapping garages
 }
 
 Config.GiveKeys = {
@@ -33,101 +36,107 @@ Config.GiveKeys = {
     price = 500
 }
 
-Config.IconAnimation = "fade"
+-- Icon animation settings
+Config.IconAnimation = "fade" --- Animation type for icons
+
+-- Icons for different vehicle types
 Config.Icons = {
-    [8] = "motorcycle",
-    [13] = "bicycle",
-    [14] = "sailboat",
-    [15] = "helicopter",
-    [16] = "plane",
+    [8] = "motorcycle",  --- Icon for motorcycles
+    [13] = "bicycle",    --- Icon for bicycles
+    [14] = "sailboat",   --- Icon for sailboats
+    [15] = "helicopter", --- Icon for helicopters
+    [16] = "plane",      --- Icon for planes
 }
 
+-- Prices for impounding different vehicle types
 Config.ImpoundPrice = {
-    [0] = 15000,  -- Compacts
-    [1] = 15000,  -- Sedans
-    [2] = 15000,  -- SUVs
-    [3] = 15000,  -- Coupes
-    [4] = 15000,  -- Muscle
-    [5] = 15000,  -- Sports Classics
-    [6] = 15000,  -- Sports
-    [7] = 15000,  -- Super
-    [8] = 15000,  -- Motorcycles
-    [9] = 15000,  -- Off-road
-    [10] = 15000, -- Industrial
-    [11] = 15000, -- Utility
-    [12] = 15000, -- Vans
-    [13] = 15000, -- Cylces
-    [14] = 15000, -- Boats
-    [15] = 15000, -- Helicopters
-    [16] = 15000, -- Planes
-    [17] = 15000, -- Service
-    [18] = 0,     -- Emergency
-    [19] = 15000, -- Military
-    [20] = 15000, -- Commercial
-    [21] = 0      -- Trains (lol)
+    [0] = 15000,  --- Price for compact cars
+    [1] = 15000,  --- Price for sedans
+    [2] = 15000,  --- Price for SUVs
+    [3] = 15000,  --- Price for coupes
+    [4] = 15000,  --- Price for muscle cars
+    [5] = 15000,  --- Price for sports classics
+    [6] = 15000,  --- Price for sports cars
+    [7] = 15000,  --- Price for super cars
+    [8] = 15000,  --- Price for motorcycles
+    [9] = 15000,  --- Price for off-road vehicles
+    [10] = 15000, --- Price for industrial vehicles
+    [11] = 15000, --- Price for utility vehicles
+    [12] = 15000, --- Price for vans
+    [13] = 15000, --- Price for cycles
+    [14] = 15000, --- Price for boats
+    [15] = 15000, --- Price for helicopters
+    [16] = 15000, --- Price for planes
+    [17] = 15000, --- Price for service vehicles
+    [18] = 0,     --- Price for emergency vehicles
+    [19] = 15000, --- Price for military vehicles
+    [20] = 15000, --- Price for commercial vehicles
+    [21] = 0      --- Price for trains (not applicable)
 }
 
+-- Police impound settings
 Config.PoliceImpound = {
     Target = {
         groups = {
-            police = 0
+            police = 0  --- Groups allowed to access police impound
         }
     },
     location = {
         [1] = {
             blip = {
-                enable = true,
-                sprite = 473,
-                colour = 22
+                enable = true,       --- Enable or disable the blip on the map
+                sprite = 473,        --- Sprite ID for the blip
+                colour = 40          --- Colour ID for the blip
             },
-            label = "Pátio do Detran",
+            label = "Pátio do Detran",  --- Label for the police impound location
             zones = {
                 points = {
-                    vec3(824.69000244141, -1334.0200195312, 26.0),
+                    vec3(824.69000244141, -1334.0200195312, 26.0),  --- Coordinates for the impound zone
                     vec3(831.70001220703, -1337.2700195312, 26.0),
                     vec3(831.73999023438, -1354.0300292969, 26.0),
                     vec3(832.10998535156, -1355.4799804688, 26.0),
                     vec3(824.72998046875, -1352.0400390625, 26.0),
                 },
-                thickness = 4.0,
+                thickness = 4.0,  --- Thickness of the zone boundaries
             },
         }
     }
 }
 
+-- Job vehicle shop settings
 Config.JobVehicleShop = {
     {
-        job = 'police',
-        label = 'Police Vehicle Shop',
+        job = 'police',  --- Job associated with the vehicle shop
+        label = 'Police Vehicle Shop',  --- Label for the vehicle shop
         ped = {
-            model = 'csb_trafficwarden',
-            coords = vec(457.9160, -1026.4635, 28.4376, 57.2678)
+            model = 'csb_trafficwarden',  --- Pedestrian model for the shop
+            coords = vec(457.9160, -1026.4635, 28.4376, 57.2678)  --- Coordinates for the shop
         },
-        spawn = vec(443.9391, -1021.4270, 28.2857, 92.6928),
+        spawn = vec(443.9391, -1021.4270, 28.2857, 92.6928),  --- Coordinates where vehicles spawn
         vehicle = {
             police = {
-                price = 500,
-                label = 'Police 1',
-                prefixPlate = 'POL', -- Don't have more than 3 letters
+                price = 500,  --- Price for the police vehicle
+                label = 'Police 1',  --- Label for the vehicle
+                prefixPlate = 'POL',  --- Prefix for the vehicle plate
                 forRank = {
-                    [0] = true,
-                    [1] = true,
-                    [2] = true,
-                    [3] = true,
+                    [0] = true,  --- Rank 0 can access this vehicle
+                    [1] = true,  --- Rank 1 can access this vehicle
+                    [2] = true   --- Rank 2 can access this vehicle
                 }
             },
             police2 = {
-                price = 500,
-                label = 'Police 2',
-                prefixPlate = 'POL', -- Don't have more than 3 letters
+                price = 500,  --- Price for the second police vehicle
+                label = 'Police 2',  --- Label for the second vehicle
+                prefixPlate = 'POL',  --- Prefix for the vehicle plate
                 forRank = {
-                    [0] = true,
-                    [1] = true,
-                    [2] = true,
+                    [0] = true,  --- Rank 0 can access this vehicle
+                    [1] = true,  --- Rank 1 can access this vehicle
+                    [2] = true   --- Rank 2 can access this vehicle
                 }
             }
         },
     }
 }
 
+--- Do not modify this section
 Config.HouseGarages = {}

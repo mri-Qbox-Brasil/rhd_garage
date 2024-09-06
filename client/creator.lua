@@ -23,7 +23,7 @@ local function blipInput(impound, gLabel)
             return
         end
 
-        if hi[3]:isEmpty() then
+        if utils.string.isEmpty(hi[3]) then
             goto tryAgain
         end
 
