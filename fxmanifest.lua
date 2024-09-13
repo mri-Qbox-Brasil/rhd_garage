@@ -24,7 +24,6 @@ server_scripts {
     'server/police_impound.lua',
     'server/storage.lua',
     'server/vehicle.lua',
-    'server/version.lua',
     'server/command.lua',
     'server/jobvehshop.lua'
 }
@@ -34,7 +33,6 @@ files {
     'data/peds.json',
     'data/garages.json',
     'data/vehiclesname.json',
-
     'modules/debugzone.lua',
     'modules/zone.lua',
     'modules/deformation.lua',
