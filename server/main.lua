@@ -49,15 +49,11 @@ end)
 --- Event
 RegisterNetEvent("rhd_garage:server:removeTemp", function ( data )
     if GetInvokingResource() then return end
-
     local player = exports.qbx_core:GetPlayer(source)
     local citizenid = player.PlayerData.citizenid
-
-    print("removeTemp", citizenid, data.model)
     if tempVehicle[citizenid] == data.model then
         tempVehicle[citizenid] = nil
     end
-
 end)
 
 lib.addCommand('removeTemp', {

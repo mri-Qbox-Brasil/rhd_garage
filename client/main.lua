@@ -155,8 +155,6 @@ local function actionMenu ( data )
                         return
                     end
                     destroyPreview()
-                    -- print(json.encode(data))
-
                     spawnvehicle( data )
                 end
             },
@@ -347,14 +345,9 @@ local function openMenu ( data )
         options = {}
     }
 
-    -- print(json.encode(data))
-    -- local vehicles = exports.qbx_core:GetVehiclesByHash()
-
-
     if data.vehicles then
         for i=1, #data.vehicles do
             local v = data.vehicles[i]
-            -- print(v)
             local vehModel = v
             local vehName = GetLabelText(GetDisplayNameFromVehicleModel(v))
 
@@ -522,9 +515,6 @@ end
 --- Store Vehicle To Garage
 ---@param data GarageVehicleData
 local function storeVeh ( data )
-    -- print(json.encode(data))
-    -- {"targetped":true,"spawnpoint":[{"x":105.08464050292969,"y":-1076.3994140625,"z":28.91999816894531,"w":340.0},{"x":107.84837341308594,"y":-1077.8819580078126,"z":28.91999816894531,"w":340.0},{"x":111.22987365722656,"y":-1079.630859375,"z":28.91999626159668,"w":340.0},{"x":106.56298828125,"y":-1064.118896484375,"z":28.92056465148925,"w":246.5},{"x":108.02095031738281,"y":-1060.681640625,"z":28.91999816894531,"w":246.5},{"x":109.59732818603516,"y":-1057.3714599609376,"z":28.9200210571289,"w":246.5},{"x":111.0271224975586,"y":-1053.5751953125,"z":28.9282112121582,"w":246.5}],"garage":"Garagem da Praça 1 ","type":["car","motorcycle","cycles"]}
-
     local myCoords = GetEntityCoords(cache.ped)
     local vehicle = cache.vehicle or lib.getClosestVehicle(myCoords)
 
