@@ -95,6 +95,15 @@ RegisterNetEvent("rhd_garage:server:saveCustomVehicleName", function (fileData)
     return storage.SaveVehicleName(fileData)
 end)
 
+lib.callback.register('rhd_garage:server:spawnVehicle', function (source, model, coords)
+    local netid, veh = qbx.spawnVehicle({
+        model = model,
+        spawnSource = coords,
+        warp = false,
+    })
+    return netid, veh
+end)
+
 --- exports
 exports("Garage", function ()
     return GarageZone

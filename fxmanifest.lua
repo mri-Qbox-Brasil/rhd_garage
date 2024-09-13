@@ -6,6 +6,7 @@ description 'Garage system for ESX & QBCore made by RHD Team'
 
 shared_scripts {
     '@ox_lib/init.lua',
+    '@qbx_core/modules/lib.lua',
     'shared/*.lua',
     'bridge/houses/*.lua',
     'bridge/framework/*.lua'

@@ -195,15 +195,10 @@ function utils.getFuel(vehicle)
 end
 
 function utils.createPlyVeh ( model, coords, cb, network )
-    print(model)
     network = network == nil and true or network
     lib.requestModel(model, 1500)
-    local veh = CreateVehicle(model, coords.x, coords.y, coords.z, coords.w, network, false)
-    if network then
-        local id = NetworkGetNetworkIdFromEntity(veh)
-        SetNetworkIdCanMigrate(id, true)
-        SetEntityAsMissionEntity(veh, true, true)
-    end
+    local netid = lib.callback.await("rhd_garage:server:spawnVehicle", false, model, coords)
+    local veh = NetworkGetEntityFromNetworkId(netid)
     SetVehicleHasBeenOwnedByPlayer(veh, true)
     SetVehicleNeedsToBeHotwired(veh, false)
     SetVehRadioStation(veh, 'OFF')

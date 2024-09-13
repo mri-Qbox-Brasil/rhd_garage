@@ -114,6 +114,16 @@ if Config.InDevelopment then
 
         TriggerServerEvent('reloadcache:server')
     end, false)
+
+    AddEventHandler('onResourceStart', function(resource)
+        if resource == GetCurrentResourceName() then
+            Wait(2000)
+            ExecuteCommand("loaded")
+            Wait(1000)
+            ExecuteCommand("reloadcache")
+            print("Framework: Player cache loaded.")
+        end
+    end)
 end
 
 if isServer then
