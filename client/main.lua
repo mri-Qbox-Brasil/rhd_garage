@@ -68,6 +68,7 @@ local function spawnvehicle ( data )
 
     if GetResourceState('mri_Qcarkeys') == 'started' and Config.GiveKeys.onspawn then
         local plate = vehData.plate or data.plate
+        if exports.mri_Qcarkeys:HavePermanentKey(plate) then return end
         exports.mri_Qcarkeys:GiveKeyItem(plate)
     end
     

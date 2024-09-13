@@ -118,6 +118,7 @@ if Config.InDevelopment then
     AddEventHandler('onResourceStart', function(resource)
         if resource == GetCurrentResourceName() then
             Wait(2000)
+            if not source or source == 0 then return end
             ExecuteCommand("loaded")
             Wait(1000)
             ExecuteCommand("reloadcache")
