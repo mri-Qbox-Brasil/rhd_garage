@@ -33,6 +33,7 @@ Config.SwapGarage = {
 Config.GiveKeys = {
     tempkeys = false, -- true se você quiser dar chaves temporárias quando spawnar o veículo
     enable = true,
+    onspawn = true, --- Opção ZAP: deixe true para seu player ganhar do nada uma chave do carro quando spawnar o veículo e remover quando ele guardar (ao invés dele ter que ir comprar em um chaveiro uma cópia)
     price = 500
 }
 

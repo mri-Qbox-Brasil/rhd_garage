@@ -66,6 +66,11 @@ local function spawnvehicle ( data )
     TriggerServerEvent("rhd_garage:server:updateState", { plate = vehData.plate or data.plate, state = 0, garage = vehData.garage or data.garage, })
     Entity(vehEntity).state:set('vehlabel', vehData.vehicle_name or data.vehicle_name)
 
+    if GetResourceState('mri_Qcarkeys') == 'started' and Config.GiveKeys.onspawn then
+        local plate = vehData.plate or data.plate
+        exports.mri_Qcarkeys:GiveKeyItem(plate)
+    end
+    
     if Config.GiveKeys.tempkeys then
         TriggerEvent("vehiclekeys:client:SetOwner", vehData.plate:trim())
     end
@@ -560,6 +565,10 @@ local function storeVeh ( data )
         Wait(1000)
     end
     if DoesEntityExist(vehicle) then
+        if GetResourceState('mri_Qcarkeys') == 'started' and Config.GiveKeys.onspawn then
+            exports.mri_Qcarkeys:RemoveKeyItem(plate)
+        end
+
         SetEntityAsMissionEntity(vehicle, true, true)
         DeleteVehicle(vehicle)
         TriggerServerEvent('rhd_garage:server:updateState', {plate = plate, state = 1, garage = data.garage})
