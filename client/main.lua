@@ -306,32 +306,28 @@ local function actionMenu ( data )
 end
 
 --- Get available spawn point
----@param point table
----@param ignoreDist boolean
+---@param points table
+---@param ignoreDist boolean?
+---@param defaultCoords vector4?
 ---@return vector4?
-local function getAvailableSP(point, ignoreDist, default)
+local function getAvailableSP(points, ignoreDist, defaultCoords)
     assert(
-        type(point) == "table" and point[1], 'Invalid "point" parameter: Expected a non-empty array table.'
+        type(points) == "table" and points[1], 'Invalid "points" parameter: Expected a non-empty array table.'
     )
 
-    local coords = default
-
-    local result
-    lib.array.forEach(point, function (c)
-        local sp = vec(c.x, c.y, c.z, c.w)
-        local vehEntity = lib.getClosestVehicle(sp.xyz, 3.0, true)
+    for k, v in pairs(points) do
+        local sp = vec(v.x, v.y, v.z, v.w)
+        local vehEntity = lib.getClosestVehicle(sp.xyz, 2.0, true)
 
         if ignoreDist and not vehEntity then
-            result = sp
+            return sp
         end
 
-        local dist = #(coords.xyz - sp.xyz)
-        if not ignoreDist and dist < 2.5 and not vehEntity then
-            result = sp
+        local dist = #(defaultCoords.xyz - sp.xyz)
+        if dist < 2.0 and not vehEntity then
+            return sp
         end
-    end)
-
-    return result
+    end
 end
 
 --- Open Garage
@@ -560,8 +556,18 @@ local function storeVeh ( data )
             exports.mri_Qcarkeys:RemoveKeyItem(plate)
         end
 
-        SetEntityAsMissionEntity(vehicle, true, true)
-        DeleteVehicle(vehicle)
+        local netId = NetworkGetNetworkIdFromEntity(vehicle)
+        local veh = NetworkGetEntityFromNetworkId(netId)
+        SetNetworkIdCanMigrate(netId, true)
+        if veh and DoesEntityExist(veh) then
+            SetEntityAsMissionEntity(veh, true, true)
+            DeleteVehicle(veh)
+        end
+
+        if vehicle and DoesEntityExist(vehicle) then
+            DeleteEntity(vehicle)
+        end
+
         TriggerServerEvent('rhd_garage:server:updateState', {plate = plate, state = 1, garage = data.garage})
         utils.notify(locale('notify.success.store_veh'), 'success')
     end

@@ -27,7 +27,7 @@ fw = {
 ---@param type string
 ---@return integer
 function fw.gm(type)
-    return fw.player.money?[type] or 0    
+    return fw.player.money?[type] or 0
 end
 
 ---@return string
@@ -92,16 +92,16 @@ if Config.InDevelopment then
     RegisterCommand("loaded", function ()
         fw.playerLoaded = true
     end, false)
-    
+
     RegisterCommand("reloadcache", function ()
         local PlayerData = QBCore.Functions.GetPlayerData()
-    
+
         local Job = PlayerData.job
         local Gang = PlayerData.gang
         local Money = PlayerData.money
-    
+
         fw.player.money = Money
-    
+
         fw.player.job = {
             name = Job.name,
             grade = Job.grade.level
@@ -118,7 +118,7 @@ if Config.InDevelopment then
     AddEventHandler('onResourceStart', function(resource)
         if resource == GetCurrentResourceName() then
             Wait(2000)
-            if not source or source == 0 then return end
+            if IsDuplicityVersion() then return end
             ExecuteCommand("loaded")
             Wait(1000)
             ExecuteCommand("reloadcache")
@@ -232,7 +232,7 @@ if isServer then
         local tp = fw.gp(newOwnerId)
         if not mp then return end
         if not tp then return false, locale("notify.error.player_offline", newOwnerId) end
-        
+
         local update = MySQL.update.await("UPDATE player_vehicles SET license = ?, citizenid = ? WHERE citizenid = ? AND plate = ? OR fakeplate = ?", {
             tp.license,
             tp.citizenid,
@@ -309,7 +309,7 @@ if isServer then
     ---@return table
     function fw.gpvbp(plate)
         local results = MySQL.single.await([[
-            SELECT 
+            SELECT
                 pv.citizenid,
                 pv.vehicle,
                 pv.vehicle_name,
@@ -324,7 +324,7 @@ if isServer then
                 pv.depotprice,
                 pv.balance,
                 p.charinfo
-            FROM player_vehicles pv LEFT JOIN players p ON pv.citizenid = p.citizenid WHERE pv.plate = ? OR pv.fakeplate = ?    
+            FROM player_vehicles pv LEFT JOIN players p ON pv.citizenid = p.citizenid WHERE pv.plate = ? OR pv.fakeplate = ?
         ]], {plate, plate})
 
         local vehicles = {}
@@ -366,7 +366,7 @@ if isServer then
         local format, value
         if Config.VehiclesInAllGarages then
             format = [[
-                SELECT 
+                SELECT
                     vehicle,
                     vehicle_name,
                     mods,
@@ -384,7 +384,7 @@ if isServer then
             value = {Identifier, 1}
         else
             format = [[
-                SELECT 
+                SELECT
                     vehicle,
                     vehicle_name,
                     mods,
@@ -398,7 +398,7 @@ if isServer then
                     deformation
                 FROM player_vehicles WHERE citizenid = ? AND garage = ? AND state = ?
             ]]
-    
+
             value = {Identifier, garage, 1}
         end
         if filter then
@@ -454,7 +454,7 @@ if isServer then
                 local plate = data.plate
                 local depotprice = data.depotprice
                 local fakeplate = data.fakeplate
-                
+
                 vehicles[#vehicles+1] = {
                     vehicle = mods,
                     vehicle_name = data.vehicle_name,
@@ -486,7 +486,7 @@ if isServer then
         local idstr = tostring(src)
         local citizenid = xPlayer[idstr]?.citizenid or false
         if not citizenid then return end
-        
+
         local results = MySQL.query.await([[
                 SELECT
                     vehicle,
@@ -543,7 +543,7 @@ if isServer then
         end
         return vehicles
     end
-    
+
     --- Insert new vehicle to database
     ---@param vehicle table
     function fw.inv(vehicle)
