@@ -115,10 +115,11 @@ if Config.InDevelopment then
         TriggerServerEvent('reloadcache:server')
     end, false)
 
-    AddEventHandler('onResourceStart', function(resource)
+    if IsDuplicityVersion() then return end
+
+    AddEventHandler('QBCore:Client:OnPlayerLoaded', function(resource)
         if resource == GetCurrentResourceName() then
             Wait(2000)
-            if IsDuplicityVersion() then return end
             ExecuteCommand("loaded")
             Wait(1000)
             ExecuteCommand("reloadcache")
