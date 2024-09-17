@@ -71,7 +71,7 @@ local function spawnvehicle ( data )
         if exports.mri_Qcarkeys:HavePermanentKey(plate) then return end
         exports.mri_Qcarkeys:GiveKeyItem(plate)
     end
-    
+
     if Config.GiveKeys.tempkeys then
         TriggerEvent("vehiclekeys:client:SetOwner", vehData.plate:trim())
     end
@@ -236,7 +236,7 @@ local function actionMenu ( data )
                             if not success then return
                                 utils.notify(locale("notify.error.swapgarage"), "error")
                             end
-    
+
                             utils.notify(locale('notify.success.swapgarage', vehdata.newgarage), "success")
                         end, vehdata)
                     end
@@ -361,7 +361,7 @@ local function openMenu ( data )
                     local defaultcoords = vec(GetOffsetFromEntityInWorldCoords(cache.ped, 0.0, 2.0, 0.5), GetEntityHeading(cache.ped)+90)
 
                     if data.spawnpoint then
-                        defaultcoords = getAvailableSP(data.spawnpoint, data.targetped)
+                        defaultcoords = getAvailableSP(data.spawnpoint, data.targetped, defaultcoords)
                     end
 
                     if not defaultcoords then
@@ -469,7 +469,7 @@ local function openMenu ( data )
                 if not defaultcoords then
                     return utils.notify(locale('notify.error.no_parking_spot'), 'error', 8000)
                 end
-                
+
                 local vehInArea = lib.getClosestVehicle(defaultcoords.xyz)
                 if DoesEntityExist(vehInArea) then return utils.notify(locale('notify.error.no_parking_spot'), 'error') end
 
