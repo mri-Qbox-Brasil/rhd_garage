@@ -88,6 +88,14 @@ RegisterNetEvent('QBCore:Player:SetPlayerData', function(PlayerData)
     }
 end)
 
+local function loadCacheData()
+    Wait(2000)
+    ExecuteCommand("loaded")
+    Wait(1000)
+    ExecuteCommand("reloadcache")
+    print("Framework: Player cache loaded.")
+end
+
 if Config.InDevelopment then
     RegisterCommand("loaded", function ()
         fw.playerLoaded = true
@@ -115,16 +123,16 @@ if Config.InDevelopment then
         TriggerServerEvent('reloadcache:server')
     end, false)
 
-    AddEventHandler('onResourceStart', function(resource)
-        if resource == GetCurrentResourceName() then
-            Wait(2000)
-            if IsDuplicityVersion() then return end
-            ExecuteCommand("loaded")
-            Wait(1000)
-            ExecuteCommand("reloadcache")
-            print("Framework: Player cache loaded.")
-        end
-    end)
+    if not IsDuplicityVersion() then
+        AddEventHandler('onClientResourceStart', function(resource)
+            if resource == GetCurrentResourceName() then
+                loadCacheData()
+            end
+        end)
+        AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
+            loadCacheData()
+        end)
+    end
 end
 
 if isServer then
