@@ -357,7 +357,7 @@ local function openMenu ( data )
                     local defaultcoords = vec(GetOffsetFromEntityInWorldCoords(cache.ped, 0.0, 2.0, 0.5), GetEntityHeading(cache.ped)+90)
 
                     if data.spawnpoint then
-                        defaultcoords = getAvailableSP(data.spawnpoint, data.targetped, defaultcoords)
+                        defaultcoords = getAvailableSP(data.spawnpoint, data.ignoreDist, defaultcoords)
                     end
 
                     if not defaultcoords then

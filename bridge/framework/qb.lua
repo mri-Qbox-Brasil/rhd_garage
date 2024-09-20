@@ -104,6 +104,10 @@ if Config.InDevelopment then
     RegisterCommand("reloadcache", function ()
         local PlayerData = QBCore.Functions.GetPlayerData()
 
+        if not PlayerData['job'] then
+            return
+        end
+
         local Job = PlayerData.job
         local Gang = PlayerData.gang
         local Money = PlayerData.money
