@@ -367,12 +367,6 @@ local function openMenu ( data )
                     local vehInArea = lib.getClosestVehicle(defaultcoords.xyz)
                     if DoesEntityExist(vehInArea) then return utils.notify(locale('notify.error.no_parking_spot'), 'error') end
 
-                    VehicleShow = utils.createPlyVeh(vehModel, defaultcoords)
-                    SetEntityAlpha(VehicleShow, 200, false)
-                    FreezeEntityPosition(VehicleShow, true)
-                    SetVehicleDoorsLocked(VehicleShow, 2)
-                    utils.createPreviewCam(VehicleShow)
-
                     actionMenu({
                         prop = nil,
                         engine = 1000,
@@ -468,15 +462,6 @@ local function openMenu ( data )
 
                 local vehInArea = lib.getClosestVehicle(defaultcoords.xyz)
                 if DoesEntityExist(vehInArea) then return utils.notify(locale('notify.error.no_parking_spot'), 'error') end
-
-                VehicleShow = utils.createPlyVeh(vehModel, defaultcoords)
-                FreezeEntityPosition(VehicleShow, true)
-                SetVehicleDoorsLocked(VehicleShow, 2)
-                utils.createPreviewCam(VehicleShow)
-
-                if vehProp and next(vehProp) then
-                    vehFunc.svp(VehicleShow, vehProp)
-                end
 
                 actionMenu({
                     prop = vehProp,
