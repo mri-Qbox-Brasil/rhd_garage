@@ -64,13 +64,19 @@ function utils.createPreviewCam(vehicle)
     if not DoesEntityExist(vehicle) then return end
 
     if not Config.DisableVehicleCamera then
+        -- -- Implementação futura: Verificar as classes dos veiculos
+        -- local class = GetVehicleClass(vehicle)
+        -- if class == 8 or class == 13 or class == 14 then
+        --     return
+        -- end
+
         local cam = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
         RenderScriptCams(true, true, 1500,  true,  true)
         local vehpos = GetEntityCoords(vehicle)
-        local pos = GetOffsetFromEntityInWorldCoords(vehicle, 0.0, 15.0, 1.0)
+        local pos = GetOffsetFromEntityInWorldCoords(vehicle, 3.0, 7.0, 1.0)
         local camF = GetGameplayCamFov()
-        SetCamCoord(cam, pos.x, pos.y, pos.z + 4.2)
-        PointCamAtCoord(cam, vehpos.x,vehpos.y,vehpos.z + 0.2)
+        SetCamCoord(cam, pos.x+1.0, pos.y+1.0, pos.z + 1.2)
+        PointCamAtCoord(cam, vehpos.x,vehpos.y-2.0,vehpos.z + 0.2)
         SetCamFov(cam, camF - 20)
     end
 end
