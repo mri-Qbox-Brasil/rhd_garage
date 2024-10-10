@@ -206,6 +206,22 @@ function utils.createPlyVeh ( model, coords, cb, network )
     if cb then cb(veh) else return veh end
 end
 
+function utils.createPreviewVeh ( model, coords, cb, network )
+    network = network == nil and true or network
+    lib.requestModel(model, 1500)
+    local veh = CreateVehicle(model, coords.x, coords.y, coords.z, coords.w, network, false)
+    if network then
+        local id = NetworkGetNetworkIdFromEntity(veh)
+        SetNetworkIdCanMigrate(id, true)
+        SetEntityAsMissionEntity(veh, true, true)
+    end
+    SetVehicleHasBeenOwnedByPlayer(veh, true)
+    SetVehicleNeedsToBeHotwired(veh, false)
+    SetVehRadioStation(veh, 'OFF')
+    SetModelAsNoLongerNeeded(model)
+    if cb then cb(veh) else return veh end
+end
+
 function utils.garageType ( data )
     local result = ""
     for i=1, #data do

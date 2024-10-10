@@ -469,7 +469,7 @@ local function openMenu ( data )
                 local vehInArea = lib.getClosestVehicle(defaultcoords.xyz)
                 if DoesEntityExist(vehInArea) then return utils.notify(locale('notify.error.no_parking_spot'), 'error') end
 
-                VehicleShow = utils.createPlyVeh(vehModel, defaultcoords)
+                VehicleShow = utils.createPreviewVeh(vehModel, defaultcoords)
                 FreezeEntityPosition(VehicleShow, true)
                 SetVehicleDoorsLocked(VehicleShow, 2)
                 utils.createPreviewCam(VehicleShow)
