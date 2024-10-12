@@ -311,6 +311,9 @@ end
 ---@param defaultCoords vector4?
 ---@return vector4?
 local function getAvailableSP(points, ignoreDist, defaultCoords)
+    if type(points) ~= "table" and ignoreDist  then
+        return points       
+    end
     assert(
         type(points) == "table" and points[1], 'Invalid "points" parameter: Expected a non-empty array table.'
     )
