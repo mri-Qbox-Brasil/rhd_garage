@@ -21,7 +21,7 @@ if qbHousing or psHousing then
         if hasKey and HG.takeVehicle?.x then
             local coords = HG.takeVehicle
             local label = HG.label
-            local spawnloc = vec4(coords.x, coords.y, coords.z, coords.h)
+            local spawnloc = vec4(coords.x, coords.y, coords.z, coords.w)
             houseZone[house] = lib.zones.sphere({
                 coords = spawnloc.xyz,
                 radius = 4,
@@ -84,7 +84,9 @@ if qbHousing or psHousing then
             local houseKey = false
             
             if GetResourceState("qb-houses") ~= "missing" then
-                houseKey = exports['qbx_houses']:hasKey(license, cid, house)
+                -- houseKey = exports['qbx_houses']:hasKey(license, cid, house)
+                houseKey = exports['ps-housing']:IsOwner(src, house)
+
             elseif GetResourceState("ps-housing") ~= "missing" then
                 houseKey = exports['ps-housing']:IsOwner(src, house)
             end
