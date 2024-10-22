@@ -200,10 +200,10 @@ function utils.getFuel(vehicle)
     return fuelLevel
 end
 
-function utils.createPlyVeh ( model, coords, cb, network )
+function utils.createPlyVeh ( model, coords, cb, network, props )
     network = network == nil and true or network
-    lib.requestModel(model, 1500)
-    local netid = lib.callback.await("rhd_garage:server:spawnVehicle", false, model, coords)
+    lib.requestModel(model, 15000)
+    local netid = lib.callback.await("rhd_garage:server:spawnVehicle", false, model, coords, props)
     local veh = NetworkGetEntityFromNetworkId(netid)
     SetVehicleHasBeenOwnedByPlayer(veh, true)
     SetVehicleNeedsToBeHotwired(veh, false)
@@ -214,7 +214,7 @@ end
 
 function utils.createPreviewVeh ( model, coords, cb, network )
     network = network == nil and true or network
-    lib.requestModel(model, 1500)
+    lib.requestModel(model, 15000)
     local veh = CreateVehicle(model, coords.x, coords.y, coords.z, coords.w, network, false)
     if network then
         local id = NetworkGetNetworkIdFromEntity(veh)

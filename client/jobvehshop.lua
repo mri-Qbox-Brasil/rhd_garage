@@ -34,7 +34,7 @@ local function previwVehicle(veh, coords, label)
     local prefixPlate = veh.prefixPlate
     
     lib.requestModel(model, 1500)
-    vehPreview = utils.createPlyVeh(model, coords, nil, false)
+    vehPreview = utils.createPreviewVeh(model, coords, nil, false)
     utils.createPreviewCam(vehPreview)
 
     lib.registerContext({

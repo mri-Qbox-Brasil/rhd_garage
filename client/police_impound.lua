@@ -16,13 +16,12 @@ end
 local function spawnvehicle ( data )
     local vehData = lib.callback.await('rhd_garage:cb_server:getvehiclePropByPlate', false, data.plate)
     if not vehData then return error('Failed to load vehicle data with number plate ' .. data.plate) end
-    local vehEntity = utils.createPlyVeh(vehData.model, data.coords)
+    local vehEntity = utils.createPlyVeh(vehData.model, data.coord, false, true, vehData.mods)
     SetVehicleOnGroundProperly(vehEntity)
     if Config.SpawnInVehicle then TaskWarpPedIntoVehicle(cache.ped, vehEntity, -1) end
     SetVehicleEngineHealth(vehEntity, vehData.engine + 0.0)
     SetVehicleBodyHealth(vehEntity, vehData.body + 0.0)
     utils.setFuel(vehEntity, vehData.fuel)
-    vehFunc.svp(vehEntity, vehData.mods)
     Deformation.set(vehEntity, vehData.deformation)
     TriggerServerEvent("rhd_garage:server:removeFromPoliceImpound", vehData.plate)
     TriggerEvent("vehiclekeys:client:SetOwner", utils.string.trim(vehData.plate))
