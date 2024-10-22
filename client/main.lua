@@ -330,7 +330,7 @@ local function getAvailableSP(points, ignoreDist, defaultCoords)
     end
 end
 
-local function listAddedVehicles(data)
+local function listAddedVehicles(data, menuData)
     for i = 1, #data.vehicles do
         local v = data.vehicles[i]
         local vehModel = v
@@ -355,8 +355,7 @@ local function listAddedVehicles(data)
                 local vehInArea = lib.getClosestVehicle(defaultcoords.xyz)
                 if DoesEntityExist(vehInArea) then return utils.notify(locale('notify.error.no_parking_spot'), 'error') end
                 
-                VehicleShow = utils.createPlyVeh(vehModel, defaultcoords)
-                SetEntityAlpha(VehicleShow, 200, false)
+                VehicleShow = utils.createPreviewVeh(vehModel, defaultcoords)
                 FreezeEntityPosition(VehicleShow, true)
                 SetVehicleDoorsLocked(VehicleShow, 2)
                 utils.createPreviewCam(VehicleShow)
@@ -381,6 +380,8 @@ local function listAddedVehicles(data)
             end,
         }
     end
+    
+    return menuData
 end
 
 --- Open Garage
@@ -396,7 +397,11 @@ local function openMenu(data)
     }
     
     if data.vehicles then
-        listAddedVehicles(data)
+        menuData = listAddedVehicles(data, menuData)
+        if #menuData.options >= 1 then
+            utils.createMenu(menuData)
+            return
+        end
     end
     
     local vehData = lib.callback.await('rhd_garage:cb_server:getVehicleList', false, data.garage, data.impound, data.shared)
