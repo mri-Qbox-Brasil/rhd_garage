@@ -390,10 +390,10 @@ if isServer then
                     engine,
                     body,
                     deformation
-                FROM player_vehicles WHERE citizenid = ? AND state = ?
+                FROM player_vehicles WHERE citizenid = ? 
             ]]
 
-            value = {Identifier, 1}
+            value = {Identifier}
         else
             format = [[
                 SELECT
@@ -413,7 +413,7 @@ if isServer then
 
             value = {Identifier, garage, 1}
         end
-        if filter then
+        if filter and not Config.VehiclesInAllGarages then
             if not filter.impound then
                 if filter.shared then
                     format = [[
