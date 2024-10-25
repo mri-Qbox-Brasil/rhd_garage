@@ -33,10 +33,12 @@ lib.callback.register("rhd_garage:cb_server:transferVehicle", function (src, cli
 
     local tid = clientData.targetSrc
 
-    if fw.rm(src, "cash", clientData.price) then
+    if not fw.rm(src, "cash", clientData.price) then
         return false, locale("notify.error.need_money", lib.math.groupdigits(clientData.price, '.'))
     end
 
+    print("Transfer vehicle from " .. fw.gn(src) .. " to " .. fw.gn(tid))
+    print("Plate: " .. clientData.plate)
     local success = fw.uvo(src, tid, clientData.plate)
     if success then utils.notify(tid, locale("notify.success.transferveh.target", fw.gn(src), clientData.garage), "success") end
     return success, locale("notify.success.transferveh.source", fw.gn(tid))
