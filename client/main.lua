@@ -180,7 +180,7 @@ local function actionMenu(data)
                         local clData = {
                             targetSrc = transferInput[1],
                             plate = data.plate,
-                            ["Preço"] = 'R$ ' .. Config.TransferVehicle.price,
+                            price = Config.TransferVehicle.price,
                             garage = data.garage
                         }
                         lib.callback('rhd_garage:cb_server:transferVehicle', false, function(success, information)
