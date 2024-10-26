@@ -23,7 +23,8 @@
                 "target": "%s acabou de lhe dar um veículo, você pode verificá-lo em %s",
                 "source": "O veículo foi transferido com sucesso para %s"
             },
-            "confiscate_vehicle": "O veículo de %s foi confiscado e armazenado no %s."
+            "confiscate_vehicle": "O veículo de %s foi confiscado e armazenado no %s.",
+            "locate_vehicle": "Veículo localizado com sucesso!"
         },
         "admin": {
             "success_create": "Nova garagem criada com sucesso com o rótulo %s",
@@ -119,7 +120,7 @@
         "store": "Salvar Veículo",
         "no_vehicles": "Sem Veículos",
         "take_out_veh": "Retirar",
-        
+        "find_veh": "Localizar veículo",
         "access_impound": "Abrir Seguro",
         "impound_price": "Taxa de seguro $%s",
         "pay_impound": "Pagar taxas de seguro",

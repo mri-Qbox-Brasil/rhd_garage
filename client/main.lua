@@ -35,50 +35,108 @@ local function canSwapVehicle(to)
     return not (toJob or toGang)
 end
 
+local isSpawning = false
+
 --- Spawn Vehicle
 ---@param data GarageVehicleData
 local function spawnvehicle(data)
-    local vehData = {
-        model = data.model
-    }
-    if data.plate then
-        local vehData = lib.callback.await('rhd_garage:cb_server:getvehiclePropByPlate', false, data.plate)
-        if not vehData then return error('Failed to load vehicle data with number plate ' .. data.plate) end
+    if isSpawning then
+        utils.notify('Aguarde enquanto o veículo está sendo spawnado.', 'error')
+        return
     end
-    if Config.InDevelopment then
-        print(json.encode(data))
-    end
-    local vehEntity = utils.createPlyVeh(vehData.model, data.coords, false, true, vehData.mods or data.prop)
-    SetVehicleOnGroundProperly(vehEntity)
-    if Config.SpawnInVehicle then TaskWarpPedIntoVehicle(cache.ped, vehEntity, -1) end
-    local engine = vehData.engine or 1000
-    local body = vehData.body or 1000
-    
-    SetVehicleEngineHealth(vehEntity, engine + 0.0)
-    SetVehicleBodyHealth(vehEntity, body + 0.0)
-    utils.setFuel(vehEntity, vehData.fuel)
-    
-    if vehData.deformation or data.deformation then
-        Deformation.set(vehEntity, vehData.deformation or data.deformation)
-    end
-    TriggerServerEvent("rhd_garage:server:updateState", {plate = vehData.plate or data.plate, state = 0, garage = vehData.garage or data.garage, })
-    Entity(vehEntity).state:set('vehlabel', vehData.vehicle_name or data.vehicle_name)
-    
-    if GetResourceState('mri_Qcarkeys') == 'started' and Config.GiveKeys.onspawn then
-        local plate = vehData.plate or data.plate
-        if exports.mri_Qcarkeys:HavePermanentKey(plate) then return end
-        exports.mri_Qcarkeys:GiveKeyItem(plate)
-    end
-    
-    if Config.GiveKeys.tempkeys then
-        TriggerEvent("vehiclekeys:client:SetOwner", vehData.plate:trim())
-    end
-    
-    if not data.plate then
-        local plate = GetVehicleNumberPlateText(vehEntity)
-        TriggerEvent("vehiclekeys:client:SetOwner", plate)
+
+    isSpawning = true
+
+    local success, errorMsg = pcall(function()
+        local vehData = {
+            model = data.model,
+            plate = data.plate,
+        }
+        
+        if data.plate then
+            local callbackData = lib.callback.await('rhd_garage:cb_server:getvehiclePropByPlate', false, data.plate)
+            if not callbackData then
+                error('Failed to load vehicle data with number plate ' .. data.plate)
+            end
+            for key, value in pairs(callbackData) do
+                vehData[key] = value
+            end
+        end
+
+        if Config.InDevelopment then
+            print(json.encode(data))
+        end
+        
+        local vehEntity = utils.createPlyVeh(vehData.model, data.coords, false, true, vehData.mods)
+        
+        SetVehicleOnGroundProperly(vehEntity)
+
+        if (not vehData.mods or json.encode(vehData.mods) == "[]") and
+            (not data.prop or json.encode(data.prop) == "[]") and
+            data.plate then
+            SetVehicleNumberPlateText(vehEntity, data.plate)
+            TriggerEvent("vehiclekeys:client:SetOwner", data.plate)
+        end
+
+        SetVehicleEngineHealth(vehEntity, (vehData.engine or 1000) + 0.0)
+        SetVehicleBodyHealth(vehEntity, (vehData.body or 1000) + 0.0)
+        utils.setFuel(vehEntity, vehData.fuel or 100)
+        
+        if vehData.deformation or data.deformation then
+            Deformation.set(vehEntity, vehData.deformation or data.deformation)
+        end
+
+        Entity(vehEntity).state:set('vehlabel', vehData.vehicle_name or data.vehicle_name)
+        
+        TriggerServerEvent("rhd_garage:server:updateState", {
+            plate = vehData.plate or data.plate,
+            state = 0,
+            garage = vehData.garage or data.garage
+        })
+
+        if Config.SpawnInVehicle then
+            TaskWarpPedIntoVehicle(cache.ped, vehEntity, -1)
+        end
+
+        if GetResourceState('mri_Qcarkeys') == 'started' and Config.GiveKeys.onspawn then
+            local plate = vehData.plate or data.plate
+            if not exports.mri_Qcarkeys:HavePermanentKey(plate) then
+                exports.mri_Qcarkeys:GiveKeyItem(plate)
+            end
+        end
+
+        if Config.GiveKeys.tempkeys then
+            TriggerEvent("vehiclekeys:client:SetOwner", (vehData.plate or data.plate):trim())
+        end
+
+        if not data.plate then
+            local plate = GetVehicleNumberPlateText(vehEntity)
+            TriggerEvent("vehiclekeys:client:SetOwner", plate)
+        end
+
+        lib.progressCircle({
+            duration = 3000,
+            position = 'bottom',
+            label = 'Estacionando veículo...',
+            useWhileDead = false,
+            canCancel = false,
+            disable = {
+                move = false,
+                car = false,
+                combat = true,
+                sprint = true,
+            }
+        })
+
+    end)
+
+    isSpawning = false
+
+    if not success then
+        utils.notify('Erro ao spawnar veículo: ' .. (errorMsg or 'desconhecido'), 'error')
     end
 end
+
 local function getVehMetadata(data)
     local fuel = data.fuel
     local body = data.body
@@ -442,8 +500,8 @@ local function openMenu(data)
             local ImpoundPrice = dp > 0 and dp or Config.ImpoundPrice[vehicleClass]
             local impound
             if gState == 0 then
-                if vehFunc.govbp(plate) then
-                    disabled = true
+                if vehFunc.tvbp(plate, data.garage) then
+                    disabled = not Config.LocateVehicleOutGarage
                     description = 'STATUS: ' .. locale('status.out')
                 else
                     if Config.VehiclesInAllGarages then
@@ -470,6 +528,12 @@ local function openMenu(data)
                 iconAnimation = Config.IconAnimation,
                 metadata = getVehMetadata(vd),
                 onSelect = function()
+                    if gState == 0 and vehFunc.tvbp(plate, data.garage) and not disabled then
+                        if vehFunc.tvbp(plate, data.garage, true) then
+                            return utils.notify(locale('notify.success.locate_vehicle'), 'success', 8000)
+                        end
+                    end
+
                     local pedHeading = GetEntityHeading(cache.ped)
                     local worlcoords = GetOffsetFromEntityInWorldCoords(cache.ped, 0.0, 2.0, 0.5)
                     local defaultcoords = vec(worlcoords, pedHeading + 90)
@@ -544,7 +608,7 @@ local function storeVeh(data)
     end
     
     local prop = vehFunc.gvp(vehicle)
-    local plate = utils.string.trim(prop.plate)
+    local plate = prop and utils.string.trim(prop.plate) or data.plate
     local shared = data.shared
     local deformation = Deformation.get(vehicle)
     local fuel = utils.getFuel(vehicle)
