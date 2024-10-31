@@ -500,7 +500,10 @@ local function openMenu(data)
             local ImpoundPrice = dp > 0 and dp or Config.ImpoundPrice[vehicleClass]
             local impound
             if gState == 0 then
-                if vehFunc.tvbp(plate, data.garage) then
+                if (Config.VehiclesInAllGarages and vehFunc.govbp(plate)) or (not Config.VehiclesInAllGarages and vehFunc.tvbp(plate, data.garage)) then
+                    disabled = not Config.LocateVehicleOutGarage
+                    description = 'STATUS: ' .. locale('status.out')
+                elseif Config.VehiclesInAllGarages and vehFunc.tvbp(plate, nil) then
                     disabled = not Config.LocateVehicleOutGarage
                     description = 'STATUS: ' .. locale('status.out')
                 else
@@ -528,8 +531,8 @@ local function openMenu(data)
                 iconAnimation = Config.IconAnimation,
                 metadata = getVehMetadata(vd),
                 onSelect = function()
-                    if gState == 0 and vehFunc.tvbp(plate, data.garage) and not disabled then
-                        if vehFunc.tvbp(plate, data.garage, true) then
+                    if gState == 0 and vehFunc.tvbp(plate, nil) and not disabled then
+                        if vehFunc.tvbp(plate, nil, true) then
                             return utils.notify(locale('notify.success.locate_vehicle'), 'success', 8000)
                         end
                     end
