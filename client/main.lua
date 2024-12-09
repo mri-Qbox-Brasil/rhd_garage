@@ -631,6 +631,10 @@ local function storeVeh(data)
     if not isOwned and not data.vehicles then return
         utils.notify(locale('notify.error.not_owned'), 'error')
     end
+    if isOwned and data.vehicles then return
+        utils.notify(locale('notify.error.is_service_garage'), 'error')
+    end
+
     if cache.vehicle and cache.seat == -1 then
         TaskLeaveAnyVehicle(cache.ped, true, 0)
         Wait(1000)
