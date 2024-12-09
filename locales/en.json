@@ -6,6 +6,7 @@
             "not_enough_cash": "You don't have enough money in your pocket!",
             "not_enough_bank": "There is not enough money in your bank account!",
             "not_owned" : "This vehicle is not yours!",
+            "is_service_garage" : "You can't store your vehicle in a service garage.",
             "npc_vehicle" : "Cannot confiscate illegal vehicles!",
             "need_money" : "You need $%s to do this",
             "swapgarage": "A problem occurred !",

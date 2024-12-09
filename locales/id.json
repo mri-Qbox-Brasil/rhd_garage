@@ -6,6 +6,7 @@
             "not_enough_cash": "Anda tidak memiliki cukup uang di saku Anda!",
             "not_enough_bank": "Tidak cukup uang di rekening bank Anda!",
             "not_owned" : "Kendaraan ini bukan milik Anda!",
+            "is_service_garage" : "Você não pode guardar seu veículo em uma garagem de trabalho.",
             "npc_vehicle" : "Cannot confiscate illegal vehicles!",
             "need_money" : "Anda membutuhkan $%s untuk melakukan ini",
             "swapgarage": "Terjadi masalah!",
