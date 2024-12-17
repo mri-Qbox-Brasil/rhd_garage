@@ -44,6 +44,15 @@ local function spawnvehicle(data)
         utils.notify('Aguarde enquanto o veículo está sendo spawnado.', 'error')
         return
     end
+    
+    if Config.checkInventoryLimit and not exports['mri_Qbox']:CanCarryItem("vehiclekey", 1) then
+        lib.notify({
+            title = 'Erro',
+            description = 'Inventário cheio',
+            type = 'error'
+        })
+        return
+    end
 
     isSpawning = true
 
