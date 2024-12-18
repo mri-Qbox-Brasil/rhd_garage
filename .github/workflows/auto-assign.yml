@@ -7,16 +7,28 @@ jobs:
   auto-assign:
     runs-on: ubuntu-latest
     steps:
+      # Instalar o jq para manipulação de JSON
+      - name: Install jq
+        run: sudo apt-get install jq -y
+
+      # Obter os administradores da organização
       - name: Get Organization Owners
         run: |
           curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                -H "Accept: application/vnd.github.v3+json" \
-               https://api.github.com/orgs/ORG_NAME/members?role=admin > owners.json
+               https://api.github.com/orgs/mri-Qbox-Brasil/members?role=admin > owners.json
 
+      # Preparar lista de responsáveis (assignees)
+      - name: Parse Owners
+        id: parse_owners
+        run: |
+          OWNERS=$(jq -r '.[].login' owners.json | jq -Rsc 'split("\n")[:-1]')
+          echo "::set-output name=owners::$OWNERS"
+
+      # Atribuir os responsáveis ao PR
       - name: Assign Owners
         run: |
-          OWNERS=$(jq -r '.[].login' owners.json | paste -sd, -)
           curl -X POST -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                -H "Accept: application/vnd.github.v3+json" \
-               -d '{"assignees":['"$OWNERS"']}' \
+               -d '{"assignees": '${{ steps.parse_owners.outputs.owners}'} }' \
                ${{ github.event.pull_request.url }}/assignees
