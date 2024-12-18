@@ -11,12 +11,35 @@ jobs:
       - name: Install jq
         run: sudo apt-get install jq -y
 
+      # Validar se o token está acessível
+      - name: Validate Token Access
+        run: |
+          if [ -z "${{ secrets.GH_ASSIGN }}" ]; then
+            echo "Token is not available!"
+            exit 1
+          else
+            echo "Token is available."
+          fi
+
       # Obter os administradores da organização
       - name: Get Organization Owners
         run: |
-          curl -H "Authorization: Bearer ${{ secrets.GH_ASSIGN }}" \
+          curl -v -H "Authorization: Bearer ${{ secrets.GH_ASSIGN }}" \
                -H "Accept: application/vnd.github.v3+json" \
-               https://api.github.com/orgs/mri-Qbox-Brasil/members?role=admin > owners.json
+               https://api.github.com/orgs/mri-Qbox-Brasil/members?role=admin -o owners.json
+
+      # Depurar os headers enviados na requisição
+      - name: Debug Request Headers
+        run: |
+          curl -v -H "Authorization: Bearer [TOKEN_REDACTED]" \
+               -H "Accept: application/vnd.github.v3+json" \
+               https://api.github.com/orgs/mri-Qbox-Brasil/members?role=admin
+
+      # Depurar resposta da API
+      - name: Debug API Response
+        run: |
+          echo "Response from API:"
+          cat owners.json
 
       # Preparar lista de assignees
       - name: Parse Owners
@@ -25,9 +48,10 @@ jobs:
           OWNERS=$(jq -r '.[].login' owners.json | jq -Rsc 'split("\n")[:-1]')
           echo "owners=$OWNERS" >> $GITHUB_ENV
 
-      - name: Debug Owners
+      # Depurar lista de owners
+      - name: Debug Parsed Owners
         run: |
-            echo "Owners: ${owners}"
+          echo "Parsed Owners: ${{ env.owners }}"
 
       # Atribuir os assignees ao PR
       - name: Assign Owners
@@ -35,5 +59,5 @@ jobs:
           curl -X POST \
                -H "Authorization: Bearer ${{ secrets.GH_ASSIGN }}" \
                -H "Accept: application/vnd.github.v3+json" \
-               -d "{\"assignees\": ${owners}}" \
+               -d "{\"assignees\": ${{ env.owners }}}" \
                https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/assignees
