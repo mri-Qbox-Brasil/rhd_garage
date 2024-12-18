@@ -2,7 +2,6 @@ name: Assign Owners to PR
 on:
   pull_request:
     types: [opened, reopened]
-  workflow_dispatch: # Permite execução manual
 
 jobs:
   auto-assign:
@@ -24,12 +23,12 @@ jobs:
         id: parse_owners
         run: |
           OWNERS=$(jq -r '.[].login' owners.json | jq -Rsc 'split("\n")[:-1]')
-          echo "::set-output name=owners::$OWNERS"
+          echo "owners=$OWNERS" >> $GITHUB_ENV
 
       # Atribuir os responsáveis ao PR
       - name: Assign Owners
         run: |
           curl -X POST -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                -H "Accept: application/vnd.github.v3+json" \
-               -d '{"assignees": '${{ steps.parse_owners.outputs.owners}'} }' \
+               -d "{\"assignees\": ${owners}}" \
                ${{ github.event.pull_request.url }}/assignees
