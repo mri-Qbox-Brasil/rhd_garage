@@ -11,16 +11,6 @@ jobs:
   auto-assign:
     runs-on: ubuntu-latest
     steps:
-      # Validar se a URL está configurada corretamente
-      - name: Validate Assignees URL
-        run: |
-          if [ -z "${{ secrets.ASSIGNEES_URL }}" ]; then
-            echo "ASSIGNEES_URL is not set!"
-            exit 1
-          else
-            echo "ASSIGNEES_URL is available."
-          fi
-
       # Obter os assignees da URL configurada
       - name: Get Assignees from URL
         run: |
