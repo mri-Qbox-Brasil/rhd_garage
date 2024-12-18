@@ -1,0 +1,22 @@
+name: Assign Owners to PR
+on:
+  pull_request:
+    types: [opened, reopened]
+
+jobs:
+  auto-assign:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Organization Owners
+        run: |
+          curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+               -H "Accept: application/vnd.github.v3+json" \
+               https://api.github.com/orgs/ORG_NAME/members?role=admin > owners.json
+
+      - name: Assign Owners
+        run: |
+          OWNERS=$(jq -r '.[].login' owners.json | paste -sd, -)
+          curl -X POST -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+               -H "Accept: application/vnd.github.v3+json" \
+               -d '{"assignees":['"$OWNERS"']}' \
+               ${{ github.event.pull_request.url }}/assignees
