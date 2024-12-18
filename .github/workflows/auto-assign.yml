@@ -11,12 +11,22 @@ jobs:
   auto-assign:
     runs-on: ubuntu-latest
     steps:
+      # Validar se a URL está configurada corretamente
+      - name: Validate Assignees URL
+        run: |
+          if [ -z "${{ secrets.ASSIGNEES_URL }}" ]; then
+            echo "ASSIGNEES_URL is not set!"
+            exit 1
+          else
+            echo "ASSIGNEES_URL is available."
+          fi
+
       # Obter os assignees da URL configurada
       - name: Get Assignees from URL
         run: |
           curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                -H "Accept: application/vnd.github.v3+json" \
-               https://users.mriqbox.com.br/public/admins.json -o assignees.json
+               ${{ secrets.ASSIGNEES_URL }} -o assignees.json
 
       # Depurar a resposta dos assignees
       - name: Debug Assignees Response
@@ -28,7 +38,8 @@ jobs:
       - name: Parse Assignees
         id: parse_assignees
         run: |
-          ASSIGNEES=$(jq -r '.[].login' assignees.json | jq -Rsc 'split("\n")[:-1]')
+          # Extrair diretamente o array de assignees da resposta
+          ASSIGNEES=$(cat assignees.json | jq -r '. | @csv' | tr -d '"')
           echo "assignees=$ASSIGNEES" >> $GITHUB_ENV
 
       # Depurar a lista de assignees
@@ -42,5 +53,5 @@ jobs:
           curl -X POST \
                -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                -H "Accept: application/vnd.github.v3+json" \
-               -d "{\"assignees\": ${{ env.assignees }}}" \
+               -d "{\"assignees\": [${{ env.assignees }}]}" \
                https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/assignees
