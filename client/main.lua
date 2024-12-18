@@ -45,6 +45,15 @@ local function spawnvehicle(data)
         return
     end
 
+    if Config.CheckInventoryLimit and not exports['mri_Qbox']:CanCarryItem("vehiclekey", 1) then
+        lib.notify({
+            title = 'Erro',
+            description = 'Inventário cheio',
+            type = 'error'
+        })
+        return
+    end
+
     isSpawning = true
 
     local success, errorMsg = pcall(function()

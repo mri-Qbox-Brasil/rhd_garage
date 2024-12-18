@@ -12,7 +12,7 @@ Config.SpawnInVehicle = false  --- change this to true if you want the player to
 Config.VehiclesInAllGarages = false --- Opção ZAP: deixe true para todos os veículos do player aparecerem em todas as garagens
 Config.DisableVehicleCamera = false --- Desativa a movimentação de câmera ao puxar o veículo
 Config.LocateVehicleOutGarage = true --- Opção ZAP: encontrar veículos fora da garagem
-
+Config.CheckInventoryLimit = false --- Deixe true para checar se o jogador tem espaço suficiente para receber a chave
 --- Additional: (Requires ox_target or qb-target resource)
 Config.UseJobVechileShop = false --- Change this to false if you do not want to use the work vehicle shop system from rhd
 Config.UsePoliceImpound = true  --- change it to false if you don't want to use the police impound system from rhd
