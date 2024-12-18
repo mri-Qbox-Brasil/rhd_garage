@@ -18,7 +18,7 @@ jobs:
       # Validar se o token está acessível
       - name: Validate Token Access
         run: |
-          if [ -z "${{ secrets.GH_ASSIGN }}" ]; then
+          if [ -z "${{ secrets.GITHUB_TOKEN }}" ]; then
             echo "Token is not available!"
             exit 1
           else
