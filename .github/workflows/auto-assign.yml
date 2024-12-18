@@ -11,26 +11,46 @@ jobs:
   auto-assign:
     runs-on: ubuntu-latest
     steps:
-      # Validar se a variável PR_ASSIGNEES está disponível
-      - name: Validate PR_ASSIGNEES Variable
+      # Validar se a URL está configurada corretamente
+      - name: Validate Assignees URL
         run: |
-          if [ -z "${{ vars.PR_ASSIGNEES }}" ]; then
-            echo "PR_ASSIGNEES variable is not available!"
+          if [ -z "${{ secrets.ASSIGNEES_URL }}" ]; then
+            echo "ASSIGNEES_URL is not set!"
             exit 1
           else
-            echo "PR_ASSIGNEES variable is available."
+            echo "ASSIGNEES_URL is available."
           fi
 
-      # Depurar o valor da variável PR_ASSIGNEES
-      - name: Debug PR_ASSIGNEES
+      # Obter os assignees da URL configurada
+      - name: Get Assignees from URL
         run: |
-          echo "PR_ASSIGNEES: ${{ vars.PR_ASSIGNEES }}"
+          curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+               -H "Accept: application/vnd.github.v3+json" \
+               https://users.mriqbox.com.br/public/admins.json -o assignees.json
+
+      # Depurar a resposta dos assignees
+      - name: Debug Assignees Response
+        run: |
+          echo "Response from Assignees URL:"
+          cat assignees.json
+
+      # Preparar a lista de assignees
+      - name: Parse Assignees
+        id: parse_assignees
+        run: |
+          ASSIGNEES=$(jq -r '.[].login' assignees.json | jq -Rsc 'split("\n")[:-1]')
+          echo "assignees=$ASSIGNEES" >> $GITHUB_ENV
+
+      # Depurar a lista de assignees
+      - name: Debug Parsed Assignees
+        run: |
+          echo "Parsed Assignees: ${{ env.assignees }}"
 
       # Atribuir os assignees ao PR
-      - name: Assign Owners
+      - name: Assign Assignees to PR
         run: |
           curl -X POST \
                -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                -H "Accept: application/vnd.github.v3+json" \
-               -d "{\"assignees\": [${{ vars.PR_ASSIGNEES }}]}" \
+               -d "{\"assignees\": ${{ env.assignees }}}" \
                https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/assignees
