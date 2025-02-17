@@ -16,7 +16,7 @@ end
 local function spawnvehicle ( data )
     local vehData = lib.callback.await('rhd_garage:cb_server:getvehiclePropByPlate', false, data.plate)
     if not vehData then return error('Failed to load vehicle data with number plate ' .. data.plate) end
-    local vehEntity = utils.createPlyVeh(vehData.model, data.coord, false, true, vehData.mods)
+    local vehEntity = utils.createPlyVeh(vehData.model, data.coords, false, true, vehData.mods)
     SetVehicleOnGroundProperly(vehEntity)
     if Config.SpawnInVehicle then TaskWarpPedIntoVehicle(cache.ped, vehEntity, -1) end
     SetVehicleEngineHealth(vehEntity, vehData.engine + 0.0)
@@ -53,13 +53,13 @@ local function openpoliceImpound ( garage )
             local fine = v.fine
             local paid = v.paid
             local date = v.date
-    
+
             local paidstatus = locale("context.policeImpound.not_paid")
-    
+
             if paid > 0 then
                 paidstatus = locale("context.policeImpound.paid")
             end
-    
+
             context.options[#context.options+1] = {
                 title = ("%s [%s]"):format(vehname, plate:upper()),
                 description = locale("context.policeImpound.vehdescription", fine, paidstatus),
@@ -122,7 +122,7 @@ local function openpoliceImpound ( garage )
                                 local checkkDate, day = lib.callback.await("rhd_garage:cb_server:policeImpound.cekDate", false, date)
 
                                 local continue, takeout = false, false
-                                
+
                                 if not checkkDate then
                                     local alert = lib.alertDialog({
                                         header = ("Halo %s"):format(fw.gn()),
@@ -151,7 +151,7 @@ local function openpoliceImpound ( garage )
                                 if takeout then
                                     local data = {
                                         props = props,
-                                        coords = vec(GetEntityCoords(cache.ped), GetEntityHeading(cache.ped)),
+                                        coords = vec4(GetEntityCoords(cache.ped), GetEntityHeading(cache.ped)),
                                         plate = plate,
                                         deformation = deformation
                                     }
@@ -217,7 +217,7 @@ local function impoundVehicle (vehicle)
         { type = 'select', label = locale('input.police_impound.confiscate_garage_loc'), options = garageList, default = garageList[1] },
         { type = 'date', label = locale('input.police_impound.confiscate_until'), icon = {'far', 'calendar'}, default = true, format = "DD/MM/YYYY" }
     })
-    
+
     if input then
         local sendToServer = {
             citizenid = ownerCitizenid,
@@ -376,10 +376,10 @@ lib.callback.register("rhd_garage:cb_client:sendFine", function ( fine )
                     icon = 'fab fa-cc-mastercard',
                     iconAnimation = Config.IconAnimation,
                     description = locale('context.insurance.pay_methode_bank_title_desc'),
-                    onSelect = function ()  
+                    onSelect = function ()
                         if fw.gm('bank') < fine then
                             continue = true
-                            utils.notify(locale('notify.error.not_enough_bank'), 'error') 
+                            utils.notify(locale('notify.error.not_enough_bank'), 'error')
                             return
                         end
 
@@ -411,7 +411,7 @@ CreateThread(function()
     local Location = Config.PoliceImpound.location
     local Target = Config.PoliceImpound.Target
     if Config.UsePoliceImpound and next(Location) then
-        
+
         setUpTarget()
 
         for k, v in pairs(Location) do
@@ -444,12 +444,12 @@ CreateThread(function()
                                 label = v.label,
                             }
                         })
-                        
+
                     end
                 end,
                 onExit = function ()
                     utils.drawtext('hide')
-    
+
                     radFunc.remove("open_garage")
                     radFunc.remove("store_veh")
                 end
