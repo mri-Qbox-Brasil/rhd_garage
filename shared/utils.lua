@@ -90,7 +90,7 @@ function utils.destroyPreviewCam(vehicle, enterVehicle)
             DoScreenFadeIn(500)
         end
 
-        RenderScriptCams(false, true, 1500, false, false)
+        RenderScriptCams(false, false, 0, false, false)
         DestroyCam(utils.previewCam, true)
         utils.previewCam = nil
     end
