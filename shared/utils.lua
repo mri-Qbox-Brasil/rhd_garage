@@ -60,42 +60,39 @@ function utils.createMenu( data )
     lib.showContext(data.id)
 end
 
+utils.previewCam = nil
+
 function utils.createPreviewCam(vehicle)
     if not DoesEntityExist(vehicle) then return end
 
     if not Config.DisableVehicleCamera then
-        -- -- Implementação futura: Verificar as classes dos veiculos
-        -- local class = GetVehicleClass(vehicle)
-        -- if class == 8 or class == 13 or class == 14 then
-        --     return
-        -- end
-
         local cam = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
+        utils.previewCam = cam
         RenderScriptCams(true, true, 1500,  true,  true)
+
         local vehpos = GetEntityCoords(vehicle)
         local pos = GetOffsetFromEntityInWorldCoords(vehicle, 4.0, 7.0, 1.0)
         local camF = GetGameplayCamFov()
+
         SetCamCoord(cam, pos.x, pos.y, pos.z + 1.2)
-        PointCamAtCoord(cam, vehpos.x,vehpos.y,vehpos.z + 0.2)
+        PointCamAtCoord(cam, vehpos.x, vehpos.y, vehpos.z + 0.2)
         SetCamFov(cam, camF - 20)
     end
 end
 
 function utils.destroyPreviewCam(vehicle, enterVehicle)
     if not DoesEntityExist(vehicle) then return end
-    local cam = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
-    local vehpos = GetEntityCoords(vehicle)
-    local pos = GetOffsetFromEntityInWorldCoords(vehicle, 0.0, 5.0, 1.0)
-    SetCamCoord(cam, pos.x, pos.y, pos.z + 0.4)
-    PointCamAtCoord(cam, vehpos.x,vehpos.y,vehpos.z + 0.2)
-    
-    if enterVehicle then
-        DoScreenFadeOut(500)
-        Wait(1000)
-        DoScreenFadeIn(500)
-        RenderScriptCams(false, true, 1500,  false,  false)
-    else
-        RenderScriptCams(false, true, 1500,  false,  false)
+
+    if utils.previewCam then
+        if enterVehicle then
+            DoScreenFadeOut(500)
+            Wait(1000)
+            DoScreenFadeIn(500)
+        end
+
+        RenderScriptCams(false, true, 1500, false, false)
+        DestroyCam(utils.previewCam, true)
+        utils.previewCam = nil
     end
 end
 
@@ -103,7 +100,7 @@ function utils.createTargetPed(model, coords, options)
     local newoptions = {}
     local qbtd = nil --- qb-target distance options
     
-    lib.requestModel(model, 1500)
+    lib.requestModel(model, 150000)
     local ped = CreatePed(0, model, coords.x, coords.y, coords.z - 1, coords.w, false, false)
     SetEntityInvincible(ped, true)
     SetBlockingOfNonTemporaryEvents(ped, true)
@@ -201,9 +198,12 @@ function utils.getFuel(vehicle)
 end
 
 function utils.createPlyVeh ( model, coords, cb, network, props )
-    network = network == nil and true or network
-    lib.requestModel(model, 15000)
+    network = network == nil and false or network
+    lib.requestModel(model, 150000)
     local netid = lib.callback.await("rhd_garage:server:spawnVehicle", false, model, coords, props)
+    if not netid then 
+        return lib.notify({description = "Você deve esperar um pouco para fazer essa ação novamente", type = "error", duration = 10000})    
+    end
     local veh = NetworkGetEntityFromNetworkId(netid)
     SetVehicleHasBeenOwnedByPlayer(veh, true)
     SetVehicleNeedsToBeHotwired(veh, false)
@@ -214,7 +214,7 @@ end
 
 function utils.createPreviewVeh ( model, coords, cb, network )
     network = network == nil and true or network
-    lib.requestModel(model, 15000)
+    lib.requestModel(model, 150000)
     local veh = CreateVehicle(model, coords.x, coords.y, coords.z, coords.w, network, false)
     if network then
         local id = NetworkGetNetworkIdFromEntity(veh)

@@ -137,7 +137,7 @@ function spawnPoint.create(zone, required, existingPoint, vehicleTypes)
     ]]
 
     utils.drawtext('show', text:format(vehType, vehicle))
-    lib.requestModel(vehicle, 1500)
+    lib.requestModel(vehicle, 150000)
     curVehicle = createPV(vehicle, vec(1.0, 1.0, 1.0, 0))
 
     local vc = {}

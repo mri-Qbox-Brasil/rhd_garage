@@ -93,13 +93,28 @@ RegisterNetEvent("rhd_garage:server:saveCustomVehicleName", function (fileData)
     return storage.SaveVehicleName(fileData)
 end)
 
-lib.callback.register('rhd_garage:server:spawnVehicle', function (source, model, coords, props)
+local vehicleSpawnCooldown = {}
+
+lib.callback.register('rhd_garage:server:spawnVehicle', function(source, model, coords, props)
+    local playerId = source
+
+    if vehicleSpawnCooldown[playerId] then
+        return false, false
+    end
+
+    vehicleSpawnCooldown[playerId] = true
+
     local netid, veh = qbx.spawnVehicle({
         model = model,
         spawnSource = coords,
         warp = false,
         props = props
     })
+
+    SetTimeout(3000, function()
+        vehicleSpawnCooldown[playerId] = nil
+    end)
+
     return netid, veh
 end)
 

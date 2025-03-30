@@ -7,6 +7,10 @@ local function destroyPreview()
         DeleteVehicle(VehicleShow)
         VehicleShow = nil
     end
+    while DoesEntityExist(VehicleShow) do
+        Wait(100)
+    end
+    return true
 end
 
 local function swapEnabled(from)
@@ -40,6 +44,7 @@ local isSpawning = false
 --- Spawn Vehicle
 ---@param data GarageVehicleData
 local function spawnvehicle(data)
+    LocalPlayer.state:set('garageBusy', true)
     if isSpawning then
         utils.notify('Aguarde enquanto o veículo está sendo spawnado.', 'error')
         return
@@ -67,7 +72,8 @@ local function spawnvehicle(data)
             print(json.encode(data))
         end
         
-        local vehEntity = utils.createPlyVeh(vehData.model, data.coords, false, true, vehData.mods)
+        local vehEntity
+        utils.createPlyVeh(vehData.model, data.coords, function(veh) vehEntity = veh end, true, vehData.mods)
         
         SetVehicleOnGroundProperly(vehEntity)
 
@@ -84,6 +90,10 @@ local function spawnvehicle(data)
         
         if vehData.deformation or data.deformation then
             Deformation.set(vehEntity, vehData.deformation or data.deformation)
+        end
+
+        while not vehEntity do
+            Wait(100)
         end
 
         Entity(vehEntity).state:set('vehlabel', vehData.vehicle_name or data.vehicle_name)
@@ -131,7 +141,7 @@ local function spawnvehicle(data)
     end)
 
     isSpawning = false
-
+    LocalPlayer.state:set('garageBusy', false)
     if not success then
         utils.notify('Erro ao spawnar veículo: ' .. (errorMsg or 'desconhecido'), 'error')
     end
@@ -211,7 +221,10 @@ local function actionMenu(data)
                         })
                         return
                     end
-                    destroyPreview()
+                    local success = destroyPreview()
+                    while not success do
+                        Wait(100)
+                    end
                     spawnvehicle(data)
                 end
             },
@@ -445,6 +458,7 @@ end
 --- Open Garage
 ---@param data GarageVehicleData
 local function openMenu(data)
+    if LocalPlayer.state.garageBusy then return end
     if not data then return end
     data.type = data.type or "car"
     
@@ -608,6 +622,10 @@ local function storeVeh(data)
     
     if not lib.table.contains(data.type, vehicleType) then return
         utils.notify(locale('notify.info.invalid_veh_classs', data.garage))
+    end
+
+    if data.impound then return
+        utils.notify("Você não pode guardar veículos no pátio.", 'error')
     end
     
     local prop = vehFunc.gvp(vehicle)

@@ -93,7 +93,6 @@ local function loadCacheData()
     ExecuteCommand("loaded")
     Wait(1000)
     ExecuteCommand("reloadcache")
-    print("Framework: Player cache loaded.")
 end
 
 if Config.InDevelopment then

@@ -41,7 +41,7 @@ function pedcreator.start(zone)
     ]]
 
     utils.drawtext('show', text)
-    lib.requestModel(pedmodels, 1500)
+    lib.requestModel(pedmodels, 150000)
     curPed = CreatePed(0, pedmodels, 1.0, 1.0, 1.0, 0.0, false, false)
     SetEntityAlpha(curPed, 150, false)
     SetEntityCollision(curPed, false, false)

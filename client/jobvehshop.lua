@@ -33,7 +33,7 @@ local function previwVehicle(veh, coords, label)
     local vehLabel = veh.label
     local prefixPlate = veh.prefixPlate
     
-    lib.requestModel(model, 1500)
+    lib.requestModel(model, 150000)
     vehPreview = utils.createPreviewVeh(model, coords, nil, false)
     utils.createPreviewCam(vehPreview)
 

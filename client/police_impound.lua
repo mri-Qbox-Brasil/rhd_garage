@@ -299,12 +299,12 @@ local function setUpTarget ( )
             {
                 label = TargetLable,
                 icon = 'fas fa-car',
-                bones = bones,
+                -- bones = bones,
                 groups = TargetData.groups,
                 onSelect = function (data)
                     impoundVehicle(data.entity)
                 end,
-                distance = 1.5
+                distance = 2.5
             }
         })
     elseif Config.Target == "qb" then
