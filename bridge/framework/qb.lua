@@ -3,6 +3,17 @@ if GetResourceState('qb-core') == "missing" then return end
 QBCore = exports['qb-core']:GetCoreObject()
 local isServer = IsDuplicityVersion()
 
+-- GetCoreObject e uma copia: acompanha os veiculos cadastrados/editados em runtime no qbx_core
+local function onVehicleUpdate(model, vehicle)
+    QBCore.Shared.Vehicles[model] = vehicle
+end
+
+if isServer then
+    AddEventHandler('qbx_core:server:onVehicleUpdate', onVehicleUpdate)
+else
+    RegisterNetEvent('qbx_core:client:onVehicleUpdate', onVehicleUpdate)
+end
+
 fw = {
     player = {
         name = "Unkown Players",
