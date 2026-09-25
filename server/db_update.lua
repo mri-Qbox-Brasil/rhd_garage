@@ -1,4 +1,6 @@
 local UPDATE_SQL = {
+    ADD_COLUMN_VEHICLE_NAME = 'ALTER TABLE player_vehicles ADD vehicle_name longtext DEFAULT NULL;',
+    ADD_COLUMN_DEFORMATION = 'ALTER TABLE player_vehicles ADD deformation longtext DEFAULT NULL;',
     ADD_COLUMN_BALANCE = 'ALTER TABLE player_vehicles ADD balance int(11) NOT NULL DEFAULT 0;',
     ADD_COLUMN_PAYMENTAMOUNT = 'ALTER TABLE player_vehicles ADD paymentamount int(11) NOT NULL DEFAULT 0;',
     ADD_COLUMN_PAYMENTSLEFT = 'ALTER TABLE player_vehicles ADD paymentsleft int(11) NOT NULL DEFAULT 0;',
