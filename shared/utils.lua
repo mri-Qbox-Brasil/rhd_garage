@@ -197,12 +197,17 @@ function utils.getFuel(vehicle)
     return fuelLevel
 end
 
-function utils.createPlyVeh ( model, coords, cb, network, props )
+local spawnErrors = {
+    cooldown = "Você deve esperar um pouco para fazer essa ação novamente",
+    money = "Você não tem dinheiro suficiente para pagar o pátio.",
+}
+
+function utils.createPlyVeh ( model, coords, cb, network, props, payment )
     network = network == nil and false or network
     lib.requestModel(model, 150000)
-    local netid, reason = lib.callback.await("rhd_garage:server:spawnVehicle", false, model, coords, props)
+    local netid, reason = lib.callback.await("rhd_garage:server:spawnVehicle", false, model, coords, props, payment)
     if not netid then
-        local description = reason == 'cooldown' and "Você deve esperar um pouco para fazer essa ação novamente" or "Não foi possível retirar o veículo, tente novamente."
+        local description = spawnErrors[reason] or "Não foi possível retirar o veículo, tente novamente."
         return lib.notify({description = description, type = "error", duration = 10000})
     end
     -- the entity reaches this client some time after the server creates it

@@ -146,11 +146,36 @@ end)
 
 local vehicleSpawnCooldown = {}
 
-lib.callback.register('rhd_garage:server:spawnVehicle', function(source, model, coords, props)
+--- Impound fee for taking the vehicle out, checked before spawning and charged only after it succeeds
+---@param src number
+---@param payment {account: string, price: number, plate: string}
+---@return number? price
+local function getImpoundFee(src, payment)
+    if type(payment) ~= 'table' or (payment.account ~= 'cash' and payment.account ~= 'bank') or type(payment.plate) ~= 'string' then return end
+
+    local vehicle = fw.gpvbp(payment.plate)
+    if not vehicle.owner or vehicle.owner.citizenid ~= fw.gi(src) or vehicle.state ~= 0 then return end
+    if vehFuncS.govbp(payment.plate) then return end
+
+    local price = vehicle.depotprice and vehicle.depotprice > 0 and vehicle.depotprice or tonumber(payment.price)
+    if not price or price < 0 then return end
+    return math.floor(price)
+end
+
+lib.callback.register('rhd_garage:server:spawnVehicle', function(source, model, coords, props, payment)
     local playerId = source
 
     if vehicleSpawnCooldown[playerId] then
         return false, 'cooldown'
+    end
+
+    local fee
+    if payment then
+        fee = getImpoundFee(playerId, payment)
+        if not fee then return false, 'failed' end
+
+        local player = fw.gp(playerId)
+        if not player or (player.money[payment.account] or 0) < fee then return false, 'money' end
     end
 
     vehicleSpawnCooldown[playerId] = true
@@ -170,6 +195,11 @@ lib.callback.register('rhd_garage:server:spawnVehicle', function(source, model, 
     if not ok then
         lib.print.warn(('spawnVehicle failed for %s (%s): %s'):format(playerId, model, netid))
         return false, 'failed'
+    end
+
+    if fee and fee > 0 and not fw.rm(playerId, payment.account, fee) then
+        exports.qbx_core:DeleteVehicle(veh)
+        return false, 'money'
     end
 
     return netid, veh

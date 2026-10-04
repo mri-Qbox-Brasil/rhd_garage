@@ -43,7 +43,8 @@ local isSpawning = false
 
 --- Spawn Vehicle
 ---@param data GarageVehicleData
-local function spawnvehicle(data)
+---@param account string? impound fee account, charged by the server only if the spawn succeeds
+local function spawnvehicle(data, account)
     LocalPlayer.state:set('garageBusy', true)
     if isSpawning then
         utils.notify('Aguarde enquanto o veículo está sendo spawnado.', 'error')
@@ -73,8 +74,10 @@ local function spawnvehicle(data)
         end
         
         local vehEntity
-        utils.createPlyVeh(vehData.model, data.coords, function(veh) vehEntity = veh end, true, vehData.mods)
+        local payment = account and { account = account, price = data.depotprice, plate = data.plate } or nil
+        utils.createPlyVeh(vehData.model, data.coords, function(veh) vehEntity = veh end, true, vehData.mods, payment)
         if not vehEntity then return end
+        if payment then utils.notify(locale('garage.success_pay_impound'), 'success') end
 
         SetVehicleOnGroundProperly(vehEntity)
 
@@ -192,11 +195,7 @@ local function actionMenu(data)
                                     onSelect = function()
                                         destroyPreview()
                                         if fw.gm('cash') < data.depotprice then return utils.notify(locale('notify.error.not_enough_cash'), 'error') end
-                                        local success = lib.callback.await('rhd_garage:cb_server:removeMoney', false, 'cash', data.depotprice)
-                                        if success then
-                                            utils.notify(locale('garage.success_pay_impound'), 'success')
-                                            return spawnvehicle(data)
-                                        end
+                                        return spawnvehicle(data, 'cash')
                                     end
                                 },
                                 {
@@ -207,11 +206,7 @@ local function actionMenu(data)
                                     onSelect = function()
                                         destroyPreview()
                                         if fw.gm('bank') < data.depotprice then return utils.notify(locale('notify.error.not_enough_bank'), 'error') end
-                                        local success = lib.callback.await('rhd_garage:cb_server:removeMoney', false, 'bank', data.depotprice)
-                                        if success then
-                                            utils.notify(locale('garage.success_pay_impound'), 'success')
-                                            return spawnvehicle(data)
-                                        end
+                                        return spawnvehicle(data, 'bank')
                                     end
                                 }
                             }
