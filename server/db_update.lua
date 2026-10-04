@@ -5,7 +5,14 @@ local UPDATE_SQL = {
     ADD_COLUMN_PAYMENTAMOUNT = 'ALTER TABLE player_vehicles ADD paymentamount int(11) NOT NULL DEFAULT 0;',
     ADD_COLUMN_PAYMENTSLEFT = 'ALTER TABLE player_vehicles ADD paymentsleft int(11) NOT NULL DEFAULT 0;',
     ADD_COLUMN_FINANCETIME = 'ALTER TABLE player_vehicles ADD financetime int(11) NOT NULL DEFAULT 0;',
+    -- every plate lookup is "plate = ? OR fakeplate = ?", without this index it scans the whole table
+    ADD_INDEX_FAKEPLATE = 'ALTER TABLE player_vehicles ADD INDEX fakeplate (fakeplate);',
 }
+
+if Config.UsePoliceImpound then
+    -- the player_vehicles triggers look up police_impound by plate on every update
+    UPDATE_SQL.ADD_INDEX_POLICE_IMPOUND_PLATE = 'ALTER TABLE police_impound ADD INDEX plate (plate);'
+end
 
 AddEventHandler('onResourceStart', function(resource)
     if resource == GetCurrentResourceName() then

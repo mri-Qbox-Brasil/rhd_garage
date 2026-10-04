@@ -74,7 +74,8 @@ local function spawnvehicle(data)
         
         local vehEntity
         utils.createPlyVeh(vehData.model, data.coords, function(veh) vehEntity = veh end, true, vehData.mods)
-        
+        if not vehEntity then return end
+
         SetVehicleOnGroundProperly(vehEntity)
 
         if (not vehData.mods or json.encode(vehData.mods) == "[]") and
@@ -90,10 +91,6 @@ local function spawnvehicle(data)
         
         if vehData.deformation or data.deformation then
             Deformation.set(vehEntity, vehData.deformation or data.deformation)
-        end
-
-        while not vehEntity do
-            Wait(100)
         end
 
         Entity(vehEntity).state:set('vehlabel', vehData.vehicle_name or data.vehicle_name)
@@ -628,55 +625,42 @@ local function storeVeh(data)
         utils.notify("Você não pode guardar veículos no pátio.", 'error')
     end
     
-    local prop = vehFunc.gvp(vehicle)
-    local plate = prop and utils.string.trim(prop.plate) or data.plate
-    local shared = data.shared
-    local deformation = Deformation.get(vehicle)
-    local fuel = utils.getFuel(vehicle)
-    local engine = GetVehicleEngineHealth(vehicle)
-    local body = GetVehicleBodyHealth(vehicle)
-    local model = prop.model
-    
-    local isOwned = lib.callback.await('rhd_garage:cb_server:getvehowner', false, plate, shared, {
-        mods = prop,
-        deformation = deformation,
-        fuel = fuel,
-        engine = engine,
-        body = body,
-        vehicle_name = Entity(vehicle).state.vehlabel
-    })
-    
-    if not isOwned and not data.vehicles then return
+    if not NetworkGetEntityIsNetworked(vehicle) then return
         utils.notify(locale('notify.error.not_owned'), 'error')
     end
-    if isOwned and data.vehicles then return
-        utils.notify(locale('notify.error.is_service_garage'), 'error')
+
+    local prop = vehFunc.gvp(vehicle)
+    local plate = prop and utils.string.trim(prop.plate) or data.plate
+    local netId = NetworkGetNetworkIdFromEntity(vehicle)
+
+    local canStore, reason = lib.callback.await('rhd_garage:cb_server:canStoreVehicle', false, netId, data.garage)
+    if not canStore then return
+        utils.notify(reason, 'error')
     end
+
+    local vehicleData = {
+        mods = prop,
+        deformation = Deformation.get(vehicle),
+        fuel = utils.getFuel(vehicle),
+        engine = GetVehicleEngineHealth(vehicle),
+        body = GetVehicleBodyHealth(vehicle),
+        vehicle_name = Entity(vehicle).state.vehlabel
+    }
 
     if cache.vehicle and cache.seat == -1 then
         TaskLeaveAnyVehicle(cache.ped, true, 0)
         Wait(1000)
     end
-    if DoesEntityExist(vehicle) then
-        if GetResourceState('mri_Qcarkeys') == 'started' and Config.GiveKeys.onspawn then
-            exports.mri_Qcarkeys:RemoveKeyItem(plate)
-        end
-        
-        local netId = NetworkGetNetworkIdFromEntity(vehicle)
-        local veh = NetworkGetEntityFromNetworkId(netId)
-        SetNetworkIdCanMigrate(netId, true)
-        if veh and DoesEntityExist(veh) then
-            SetEntityAsMissionEntity(veh, true, true)
-            DeleteVehicle(veh)
-        end
-        
-        if vehicle and DoesEntityExist(vehicle) then
-            DeleteEntity(vehicle)
-        end
-        
-        TriggerServerEvent('rhd_garage:server:updateState', {plate = plate, state = 1, garage = data.garage})
-        utils.notify(locale('notify.success.store_veh'), 'success')
+
+    local stored, err = lib.callback.await('rhd_garage:cb_server:storeVehicle', false, netId, data.garage, vehicleData)
+    if not stored then return
+        utils.notify(err, 'error')
     end
+
+    if GetResourceState('mri_Qcarkeys') == 'started' and Config.GiveKeys.onspawn then
+        exports.mri_Qcarkeys:RemoveKeyItem(plate)
+    end
+    utils.notify(locale('notify.success.store_veh'), 'success')
 end
 
 --- exports

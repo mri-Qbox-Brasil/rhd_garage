@@ -200,9 +200,17 @@ end
 function utils.createPlyVeh ( model, coords, cb, network, props )
     network = network == nil and false or network
     lib.requestModel(model, 150000)
-    local netid = lib.callback.await("rhd_garage:server:spawnVehicle", false, model, coords, props)
-    if not netid then 
-        return lib.notify({description = "Você deve esperar um pouco para fazer essa ação novamente", type = "error", duration = 10000})    
+    local netid, reason = lib.callback.await("rhd_garage:server:spawnVehicle", false, model, coords, props)
+    if not netid then
+        local description = reason == 'cooldown' and "Você deve esperar um pouco para fazer essa ação novamente" or "Não foi possível retirar o veículo, tente novamente."
+        return lib.notify({description = description, type = "error", duration = 10000})
+    end
+    -- the entity reaches this client some time after the server creates it
+    local exists = pcall(lib.waitFor, function()
+        if NetworkDoesEntityExistWithNetworkId(netid) then return true end
+    end, nil, 10000)
+    if not exists then
+        return lib.notify({description = "Não foi possível retirar o veículo, tente novamente.", type = "error", duration = 10000})
     end
     local veh = NetworkGetEntityFromNetworkId(netid)
     SetVehicleHasBeenOwnedByPlayer(veh, true)

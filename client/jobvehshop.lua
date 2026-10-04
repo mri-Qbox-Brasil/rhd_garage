@@ -51,6 +51,7 @@ local function previwVehicle(veh, coords, label)
                     destroyPreviewVehicle()
                     Wait(100)
                     local newVeh = utils.createPlyVeh(model, coords)
+                    if not newVeh then return end
                     TaskWarpPedIntoVehicle(cache.ped, newVeh, -1)
                     SetVehicleFixed(newVeh)
                     SetVehicleNumberPlateText(newVeh, prefixPlate .. ' ' .. lib.string.random('1111'))

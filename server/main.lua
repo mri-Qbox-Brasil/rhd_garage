@@ -5,10 +5,51 @@ lib.callback.register('rhd_garage:cb_server:removeMoney', function(src, type, am
     return fw.rm(src, type, amount)
 end)
 
-lib.callback.register('rhd_garage:cb_server:getvehowner', function (src, plate, shared, pleaseUpdate)
-    return fw.gvobp(src, plate, {
-        owner = shared
-    }, pleaseUpdate)
+--- Checks if the player can store the vehicle in the garage
+---@return number|false entity
+---@return string? error
+---@return string? plate
+---@return boolean? service
+local function getStorableVehicle(src, netId, garage, pleaseUpdate)
+    local entity = NetworkGetEntityFromNetworkId(netId)
+    if not entity or entity == 0 or not DoesEntityExist(entity) or GetEntityType(entity) ~= 2 then
+        return false, locale('notify.error.not_veh_exist')
+    end
+
+    if #(GetEntityCoords(GetPlayerPed(src)) - GetEntityCoords(entity)) > 15.0 then
+        return false, locale('notify.error.not_veh_exist')
+    end
+
+    local plate = utils.getPlate(entity)
+    local gz = GarageZone[garage]
+
+    if gz and gz.vehicles then
+        if fw.gvobp(src, plate) then
+            return false, locale('notify.error.is_service_garage')
+        end
+        return entity, nil, plate, true
+    end
+
+    if not fw.gvobp(src, plate, { onlyOwner = not (gz and gz.shared) }, pleaseUpdate) then
+        return false, locale('notify.error.not_owned')
+    end
+
+    return entity, nil, plate, false
+end
+
+lib.callback.register('rhd_garage:cb_server:canStoreVehicle', function (src, netId, garage)
+    local entity, err = getStorableVehicle(src, netId, garage)
+    return entity and true or false, err
+end)
+
+lib.callback.register('rhd_garage:cb_server:storeVehicle', function (src, netId, garage, pleaseUpdate)
+    local entity, err, plate, service = getStorableVehicle(src, netId, garage, pleaseUpdate)
+    if not entity then return false, err end
+
+    -- server side delete works whoever is the network owner, the client one silently fails
+    exports.qbx_core:DeleteVehicle(entity)
+    if not service then fw.uvs(plate, 1, garage) end
+    return true
 end)
 
 lib.callback.register('rhd_garage:cb_server:getvehiclePropByPlate', function (_, plate)
@@ -78,7 +119,15 @@ end)
 
 RegisterNetEvent("rhd_garage:server:updateState", function ( data )
     if GetInvokingResource() then return end
-    fw.uvs(data.plate, data.state, data.garage)
+    if type(data) ~= "table" or type(data.plate) ~= "string" or data.state ~= 0 then return end
+
+    local vehicle = fw.gpvbp(data.plate)
+    if not vehicle.owner then return end
+
+    local gz = GarageZone[vehicle.garage]
+    if vehicle.owner.citizenid ~= fw.gi(source) and not (gz and gz.shared) then return end
+
+    fw.uvs(data.plate, 0, data.garage)
 end)
 
 RegisterNetEvent("rhd_garage:server:saveGarageZone", function(fileData)
@@ -99,12 +148,13 @@ lib.callback.register('rhd_garage:server:spawnVehicle', function(source, model, 
     local playerId = source
 
     if vehicleSpawnCooldown[playerId] then
-        return false, false
+        return false, 'cooldown'
     end
 
     vehicleSpawnCooldown[playerId] = true
 
-    local netid, veh = qbx.spawnVehicle({
+    -- qbx.spawnVehicle errors when no client takes ownership in time, common on a full server
+    local ok, netid, veh = pcall(qbx.spawnVehicle, {
         model = model,
         spawnSource = coords,
         warp = false,
@@ -115,7 +165,16 @@ lib.callback.register('rhd_garage:server:spawnVehicle', function(source, model, 
         vehicleSpawnCooldown[playerId] = nil
     end)
 
+    if not ok then
+        lib.print.warn(('spawnVehicle failed for %s (%s): %s'):format(playerId, model, netid))
+        return false, 'failed'
+    end
+
     return netid, veh
+end)
+
+AddEventHandler('playerDropped', function()
+    vehicleSpawnCooldown[source] = nil
 end)
 
 --- exports

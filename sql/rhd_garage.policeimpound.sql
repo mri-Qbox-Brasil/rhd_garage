@@ -8,5 +8,6 @@ CREATE TABLE IF NOT EXISTS `police_impound` (
   `date` longtext NOT NULL,
   `fine` bigint(20) DEFAULT 0,
   `paid` tinyint(4) DEFAULT 0,
-  `garage` longtext NOT NULL
+  `garage` longtext NOT NULL,
+  KEY `plate` (`plate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;

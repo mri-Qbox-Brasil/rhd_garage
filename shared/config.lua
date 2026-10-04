@@ -17,7 +17,7 @@ Config.LocateVehicleOutGarage = true --- Opção ZAP: encontrar veículos fora d
 Config.UseJobVechileShop = false --- Change this to false if you do not want to use the work vehicle shop system from rhd
 Config.UsePoliceImpound = true  --- change it to false if you don't want to use the police impound system from rhd
 
-Config.InDevelopment = true     --- Turn this off when you have finished setting up this garage
+Config.InDevelopment = false    --- Turn this off when you have finished setting up this garage
 
 -- Vehicle transfer settings
 Config.TransferVehicle = {

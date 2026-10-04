@@ -58,36 +58,13 @@ function fw.gvn(model)
     return ("%s %s"):format(vm, vn)
 end
 
-RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
-    local PlayerData = QBCore.Functions.GetPlayerData()
-    local charinfo = PlayerData.charinfo
-
-    local Job = PlayerData.job
-    local Gang = PlayerData.gang
-    local Money = PlayerData.money
-
-    fw.player.name = charinfo.firstname .. " " .. charinfo.lastname
-    fw.player.money = Money
-
-    fw.player.job = {
-        name = Job.name,
-        grade = Job.grade.level
-    }
-    fw.player.gang = {
-        name = Gang.name,
-        grade = Gang.grade.level
-    }
-    fw.playerLoaded = true
-end)
-
-RegisterNetEvent('QBCore:Player:SetPlayerData', function(PlayerData)
-    local Job = PlayerData.job
-    local Gang = PlayerData.gang
-    local Money = PlayerData.money
+local function setPlayerData(PlayerData)
     local Charinfo = PlayerData.charinfo
+    local Job = PlayerData.job
+    local Gang = PlayerData.gang
 
     fw.player.name = Charinfo.firstname .. " " .. Charinfo.lastname
-    fw.player.money = Money
+    fw.player.money = PlayerData.money
 
     fw.player.job = {
         name = Job.name,
@@ -97,67 +74,30 @@ RegisterNetEvent('QBCore:Player:SetPlayerData', function(PlayerData)
         name = Gang.name,
         grade = Gang.grade.level
     }
-end)
-
-local function loadCacheData()
-    Wait(2000)
-    ExecuteCommand("loaded")
-    Wait(1000)
-    ExecuteCommand("reloadcache")
 end
 
-if Config.InDevelopment then
-    RegisterCommand("loaded", function ()
+if not isServer then
+    RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
+        setPlayerData(QBCore.Functions.GetPlayerData())
         fw.playerLoaded = true
-    end, false)
+    end)
 
-    RegisterCommand("reloadcache", function ()
-        local PlayerData = QBCore.Functions.GetPlayerData()
+    RegisterNetEvent('QBCore:Player:SetPlayerData', setPlayerData)
 
-        if not PlayerData['job'] then
-            return
-        end
-
-        local Job = PlayerData.job
-        local Gang = PlayerData.gang
-        local Money = PlayerData.money
-
-        fw.player.money = Money
-
-        fw.player.job = {
-            name = Job.name,
-            grade = Job.grade.level
-        }
-
-        fw.player.gang = {
-            name = Gang.name,
-            grade = Gang.grade.level
-        }
-
-        TriggerServerEvent('reloadcache:server')
-    end, false)
-
-    if not IsDuplicityVersion() then
-        AddEventHandler('onClientResourceStart', function(resource)
-            if resource == GetCurrentResourceName() then
-                loadCacheData()
-            end
-        end)
-        AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
-            loadCacheData()
-        end)
+    -- OnPlayerLoaded does not fire again when this resource restarts mid-session
+    if LocalPlayer.state.isLoggedIn then
+        setPlayerData(QBCore.Functions.GetPlayerData())
+        fw.playerLoaded = true
     end
 end
 
 if isServer then
-    local xPlayer = {}
-
     --- Get Player
     ---@param src number
     ---@return table | boolean
     function fw.gp(src)
-        if not xPlayer then return false end
-        return xPlayer[tostring(src)] or false
+        local p = QBCore.Functions.GetPlayer(tonumber(src))
+        return p and p.PlayerData or false
     end
 
     --- Get Identifier
@@ -166,9 +106,9 @@ if isServer then
     ---@return string | boolean
     ---@return string | boolean
     function fw.gi(src, withLicense)
-        local pData = xPlayer[tostring(src)]
-        local citizenid, license = pData?.citizenid, withLicense and pData?.license or false
-        return citizenid or false, license
+        local pData = fw.gp(src)
+        if not pData then return false, false end
+        return pData.citizenid or false, withLicense and pData.license or false
     end
 
     --- Get Player By Identifier
@@ -194,8 +134,8 @@ if isServer then
     ---@param src number
     ---@return string
     function fw.gn(src)
-        local idstr = tostring(src)
-        local charinfo = xPlayer[idstr]?.charinfo or {}
+        local pData = fw.gp(src)
+        local charinfo = pData and pData.charinfo or {}
         return next(charinfo) and ("%s %s"):format(charinfo.firstname, charinfo.lastname) or "Unkown Players"
     end
 
@@ -255,7 +195,7 @@ if isServer then
         if not mp then return end
         if not tp then return false, locale("notify.error.player_offline", newOwnerId) end
 
-        local update = MySQL.update.await("UPDATE player_vehicles SET license = ?, citizenid = ? WHERE citizenid = ? AND plate = ? OR fakeplate = ?", {
+        local update = MySQL.update.await("UPDATE player_vehicles SET license = ?, citizenid = ? WHERE citizenid = ? AND (plate = ? OR fakeplate = ?)", {
             tp.license,
             tp.citizenid,
             mp.citizenid,
@@ -292,7 +232,7 @@ if isServer then
                     p.charinfo
                 FROM player_vehicles pv LEFT JOIN players p ON pv.citizenid = p.citizenid
                     WHERE
-                        pv.plate = ? OR pv.fakeplate = ? AND pv.citizenid = ?
+                        (pv.plate = ? OR pv.fakeplate = ?) AND pv.citizenid = ?
             ]]
             value = {plate, plate, identifier}
         end
@@ -505,8 +445,7 @@ if isServer then
     ---@param src any
     ---@return table
     function fw.gvfp(src)
-        local idstr = tostring(src)
-        local citizenid = xPlayer[idstr]?.citizenid or false
+        local citizenid = fw.gi(src)
         if not citizenid then return end
 
         local results = MySQL.query.await([[
@@ -524,6 +463,7 @@ if isServer then
 
         local vehicles = {}
         if results and results[1] then
+            local worldPlates
             for i=1, #results do
                 local v = results[i]
                 local plate = utils.string.trim(v.plate)
@@ -537,7 +477,8 @@ if isServer then
                 local stateText = locale('status.in')
 
                 if v.state == 0 then
-                    stateText = vehFuncS.govbp(plate) and locale('status.out') or locale('status.insurance')
+                    worldPlates = worldPlates or vehFuncS.getWorldPlates()
+                    stateText = worldPlates[plate] and locale('status.out') or locale('status.insurance')
                 elseif v.state == 2 then
                     stateText = locale('status.confiscated')
                 end
@@ -580,32 +521,4 @@ if isServer then
         })
     end
 
-    RegisterNetEvent('QBCore:Player:SetPlayerData', function(PlayerData)
-        local src = PlayerData.source
-        local idstr = tostring(src)
-        xPlayer[idstr] = PlayerData
-    end)
-
-    RegisterNetEvent('QBCore:Server:PlayerLoaded', function(player)
-        local src = player.PlayerData.source
-        local idstr = tostring(src)
-        xPlayer[idstr] = player.PlayerData
-        lib.print.info(("Register new cache for %s"):format(GetPlayerName(src)))
-    end)
-
-    AddEventHandler("playerDropped", function ()
-        local src = source
-        local idstr = tostring(src)
-        xPlayer[idstr] = nil
-        lib.print.info(("Remove cache from %s"):format(GetPlayerName(src)))
-    end)
-
-    if Config.InDevelopment then
-        RegisterNetEvent('reloadcache:server', function()
-            local p = QBCore.Functions.GetPlayer(source)
-            if not p then return false end
-            local idstr = tostring(source)
-            xPlayer[idstr] = p.PlayerData
-        end)
-    end
 end

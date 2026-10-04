@@ -20,6 +20,18 @@ function vehFuncS.govbp(plate)
     return false
 end
 
+--- Get the plates of every vehicle in the world, in a single pass
+---@return table<string, true>
+function vehFuncS.getWorldPlates()
+    local plates = {}
+    local veh = GetAllVehicles()
+    for i=1, #veh do
+        local plate = utils.getPlate(veh[i])
+        if plate then plates[plate] = true end
+    end
+    return plates
+end
+
 lib.callback.register('rhd_garage:cb_server:GetPlayerVehiclesForPhone', function(source)
     return fw.gvfp(source)
 end)

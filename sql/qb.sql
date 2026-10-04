@@ -24,7 +24,8 @@ CREATE TABLE IF NOT EXISTS `player_vehicles` (
   PRIMARY KEY (`id`),
   KEY `plate` (`plate`),
   KEY `citizenid` (`citizenid`),
-  KEY `license` (`license`)
+  KEY `license` (`license`),
+  KEY `fakeplate` (`fakeplate`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TRIGGER rhd_garage_update_impound_plate
