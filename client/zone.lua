@@ -146,6 +146,9 @@ lib.onCache('vehicle', function(value)
     stui = false
 end)
 
-function gzf.save ( data )
-    TriggerServerEvent("rhd_garage:server:saveGarageZone", data)
+--- Send one garage to the server, nil data deletes it
+---@param label string
+---@param oldLabel string? previous label when renaming
+function gzf.save ( label, oldLabel )
+    TriggerServerEvent("rhd_garage:server:saveGarage", label, GarageZone[label], oldLabel)
 end

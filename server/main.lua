@@ -130,10 +130,12 @@ RegisterNetEvent("rhd_garage:server:updateState", function ( data )
     fw.uvs(data.plate, 0, data.garage)
 end)
 
-RegisterNetEvent("rhd_garage:server:saveGarageZone", function(fileData)
+RegisterNetEvent("rhd_garage:server:saveGarage", function(label, data, oldLabel)
     if GetInvokingResource() then return end
-    if type(fileData) ~= "table" or type(fileData) == "nil" then return end
-    return storage.SaveGarage(fileData)
+    if not IsPlayerAceAllowed(source, ('command.%s'):format(locale('command.admin.garagelist'))) then return end
+    if type(label) ~= "string" or (data ~= nil and type(data) ~= "table") then return end
+    if oldLabel ~= nil and type(oldLabel) ~= "string" then return end
+    storage.SaveGarage(label, data, oldLabel)
 end)
 
 RegisterNetEvent("rhd_garage:server:saveCustomVehicleName", function (fileData)

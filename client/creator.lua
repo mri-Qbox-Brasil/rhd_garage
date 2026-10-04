@@ -87,7 +87,7 @@ local function createGarage ()
                     interaction = interact
                 }
                 
-                gzf.save(GarageZone)
+                gzf.save(label)
                 utils.notify(locale("notify.admin.success_create", label:upper()), "success")
             end
         end
@@ -97,7 +97,7 @@ end
 --- Delete garage by index
 local function delete(self)
     GarageZone[self.label --[[@as string]]] = nil
-    gzf.save(GarageZone)
+    gzf.save(self.label)
     utils.notify(locale("notify.admin.success_deleted", self.label --[[@as string]]), "success")
 end
 
@@ -136,7 +136,7 @@ local function setBlip(self)
                             color = blipinput[2],
                             label = blipinput[3]
                         }
-                        gzf.save(GarageZone)
+                        gzf.save(k)
                         utils.notify(locale("notify.admin.success_editblip"), "success")
                     end
                 end
@@ -146,7 +146,7 @@ local function setBlip(self)
                 icon = "trash",
                 onSelect = function()
                     GarageZone[k].blip = nil
-                    gzf.save(GarageZone)
+                    gzf.save(k)
                     utils.notify("Blip berhasil di hapus", "success")
                 end
             }
@@ -161,7 +161,7 @@ local function changeLocation(self)
         type = "poly",
         onCreated = function (Zones) ---@param Zones OxZone
             GarageZone[self.label --[[@as string]]].zones = Zones
-            gzf.save(GarageZone)
+            gzf.save(self.label)
             utils.notify(locale("notify.admin.success_changelocation"), "success")
         end
     })
@@ -188,7 +188,7 @@ local function changeGarageLabel(self)
         local newLabel = inputLabel[1]
         GarageZone[newLabel] = v
         GarageZone[k] = nil
-        gzf.save(GarageZone)
+        gzf.save(newLabel, k)
         utils.notify(locale("notify.admin.success_changelabel", newLabel))
     end
 end
@@ -237,7 +237,7 @@ local function setspawnpoint(self)
             GarageZone[k].spawnPoint = pr.c
             GarageZone[k].spawnPointVehicle = pr.v
             utils.notify("The spawn point has been successfully set", "success", 8000)
-            gzf.save(GarageZone)
+            gzf.save(k)
         end
     }
     utils.createMenu(context)
@@ -277,7 +277,7 @@ local function jobOptions(self)
 
                                     GarageZone[k].job = v.job
                                     utils.notify(locale("notify.admin.success_deleted_access"), "success")
-                                    gzf.save( GarageZone )
+                                    gzf.save(k)
                                 end
                             }
                         }
@@ -303,7 +303,7 @@ local function jobOptions(self)
                 v.job[name] = rank
                 GarageZone[k].job = v.job
                 utils.notify(locale("notify.admin.success_added_access", input[1]))
-                gzf.save( GarageZone )
+                gzf.save(k)
             end
         end
     }
@@ -345,7 +345,7 @@ local function gangOptions(self)
                                     
                                     GarageZone[k].gang = v.gang
                                     utils.notify(locale("notify.admin.success_deleted_access"), "success")
-                                    gzf.save( GarageZone )
+                                    gzf.save(k)
                                 end
                             }
                         }
@@ -370,7 +370,7 @@ local function gangOptions(self)
                 v.gang[input[1]] = tonumber(input[2])
                 GarageZone[k].gang = v.gang
                 utils.notify(locale("notify.admin.success_added_access", input[1]))
-                gzf.save( GarageZone )
+                gzf.save(k)
             end
         end
     }
@@ -421,7 +421,7 @@ local function setVehicles(garage)
         value.vehicles = input[1] or {}
         GarageZone[key].vehicles = value.vehicles
         utils.notify("Lista de Veículos alterada com sucesso!", "success", 10000)
-        gzf.save( GarageZone )
+        gzf.save(key)
     end
 end
 
@@ -558,8 +558,9 @@ CreateThread(function ()
     end
 end)
 
-RegisterNetEvent('rhd_garage:client:syncConfig', function(newconfig)
-    GarageZone = newconfig
+RegisterNetEvent('rhd_garage:client:syncGarage', function(label, data, oldLabel)
+    if oldLabel then GarageZone[oldLabel] = nil end
+    GarageZone[label] = data
     gzf.refresh()
 end)
 
